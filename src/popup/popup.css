@@ -1,0 +1,231 @@
+:root {
+    --bg: #0c0c0c;
+    --accent: #00f2ff;
+    --primary: #fa5656;
+    /* Suno Coral */
+    --panel: #1e1e1e;
+    --border: #333333;
+    --text: #ffffff;
+    --text-dim: #999999;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 320px;
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+}
+
+.studio-container {
+    padding: 16px;
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: -0.5px;
+    font-weight: 800;
+}
+
+.logo span {
+    color: var(--primary);
+}
+
+.pulse-indicator {
+    width: 6px;
+    height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--primary);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.4);
+        opacity: 0.6;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.input-panel label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+textarea,
+input[type="password"],
+input[type="text"] {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    color: white;
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+textarea:focus,
+input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.1);
+}
+
+textarea {
+    height: 90px;
+    resize: none;
+    margin-bottom: 16px;
+}
+
+.vibe-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.vibe-chip {
+    padding: 8px 2px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.65rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-dim);
+}
+
+.vibe-chip:hover {
+    background: #2a2a2a;
+    color: white;
+}
+
+.vibe-chip.active {
+    background: white;
+    color: black;
+    border-color: white;
+    font-weight: 700;
+}
+
+.custom-vibe-panel {
+    margin-bottom: 24px;
+}
+
+.glow-button {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    border: none;
+    border-radius: 24px;
+    /* Pill shaped */
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    box-shadow: 0 4px 15px rgba(250, 86, 86, 0.3);
+}
+
+.glow-button:hover {
+    transform: translateY(-1px);
+    background: #ff6060;
+    box-shadow: 0 6px 20px rgba(250, 86, 86, 0.4);
+}
+
+.glow-button:active {
+    transform: translateY(1px);
+}
+
+.glow-button:disabled {
+    background: #333;
+    color: #666;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.console-box {
+    margin-top: 20px;
+    background: #121212;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    min-height: 44px;
+}
+
+footer {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+}
+
+#ai-status {
+    color: #00ff00;
+    font-weight: 700;
+}
+
+/* Inspector Styles */
+.inspector-tools {
+    display: flex;
+    gap: 6px;
+}
+
+.icon-btn {
+    background: #1e1e1e;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+}
+
+.icon-btn:hover {
+    background: var(--accent);
+    color: black;
+    border-color: var(--accent);
+}

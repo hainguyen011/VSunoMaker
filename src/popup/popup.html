@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suno Hit-Maker AI</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Syncopate:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="studio-container">
+        <header>
+            <div class="logo">SUNO<span>-HM</span></div>
+            <div class="pulse-indicator"></div>
+        </header>
+
+        <main>
+            <div class="input-panel">
+                <label>GEMINI API KEY</label>
+                <input type="password" id="api-key" placeholder="Nhập API Key của bạn..."
+                    style="width: 100%; padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: white; margin-bottom: 20px; font-size: 0.7rem;">
+
+                <label>NGHỆ SĨ TRUYỀN CẢM HỨNG (ARTIST STYLE)</label>
+                <input type="text" id="artist-input" placeholder="Ví dụ: Sơn Tùng M-TP, Mỹ Tâm..."
+                    style="width: 100%; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; color: white; margin-bottom: 20px; font-size: 0.85rem; outline: none;">
+
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label>GIỚI TÍNH (VOCAL)</label>
+                        <select id="vocal-gender"
+                            style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
+                            <option value="Random">Ngẫu nhiên</option>
+                            <option value="Male Vocals">Nam (Male)</option>
+                            <option value="Female Vocals">Nữ (Female)</option>
+                            <option value="Duet Vocals">Song ca (Duet)</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>VÙNG MIỀN (ACCENT)</label>
+                        <select id="vocal-region"
+                            style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
+                            <option value="Standard">Chuẩn (Standard)</option>
+                            <option value="Northern">Miền Bắc (Northern)</option>
+                            <option value="Central">Miền Trung (Central)</option>
+                            <option value="Southern">Miền Nam (Southern)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="margin-bottom: 0;">Ý TƯỞNG KIỆT TÁC (CONCEPT)</label>
+                    <div class="inspector-tools">
+                        <button class="icon-btn" id="inspect-lyrics" title="Soi vùng Lyrics">✎ L</button>
+                        <button class="icon-btn" id="inspect-style" title="Soi vùng Style">✎ S</button>
+                    </div>
+                </div>
+                <textarea id="concept-input"
+                    placeholder="Ví dụ: Một bài ballad V-pop tâm trạng, nói về sự nuối tiếc trong những đêm mưa..."></textarea>
+            </div>
+
+            <div class="vibe-selector">
+                <div class="vibe-chip active" data-vibe="V-Pop Viral">V-Pop Viral</div>
+                <div class="vibe-chip" data-vibe="Indie Chill">Indie Chill</div>
+                <div class="vibe-chip" data-vibe="Vinahouse Hit">Vinahouse</div>
+                <div class="vibe-chip" data-vibe="US-UK Modern">US-UK Pop</div>
+                <div class="vibe-chip" data-vibe="K-Pop Star">K-Pop</div>
+                <div class="vibe-chip" data-vibe="Lofi HipHop">Lo-fi</div>
+                <div class="vibe-chip" data-vibe="EDM Festival">EDM</div>
+                <div class="vibe-chip" data-vibe="Rock Ballad">Rock</div>
+            </div>
+
+            <div class="custom-vibe-panel">
+                <label>VIBE TÙY CHỈNH (CUSTOM)</label>
+                <input type="text" id="custom-vibe-input" placeholder="Ví dụ: Bolero, Jazz, Funk...">
+            </div>
+
+            <div class="action-zone">
+                <button id="compose-btn" class="glow-button">
+                    TẠO HIT NGAY
+                </button>
+            </div>
+
+            <div id="status-log" class="console-box">
+                > Studio Ready...
+            </div>
+        </main>
+
+        <footer>
+            <span>AI MUSIC ENGINE v1.0</span>
+            <span id="ai-status">ONLINE</span>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

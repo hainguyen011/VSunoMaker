@@ -1,0 +1,134 @@
+/* Suno Studio - Notification Styles */
+.shm-notification {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    background: #1e1e1e;
+    border: 1px solid #333333;
+    padding: 14px 24px;
+    border-radius: 16px;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999999;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: shmSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes shmSlideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Floating Highlight Frame (Suno Studio Style) */
+.shm-highlight-frame {
+    position: absolute;
+    pointer-events: none;
+    border: 3px solid #fa5656;
+    /* Thicker border for better visibility */
+    border-radius: 12px;
+    z-index: 10000000;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    display: none;
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+
+.shm-highlight-label {
+    background: #fa5656;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 0 10px 0 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 10000001;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Style Target (Cyan) */
+.shm-highlight-frame.style-target {
+    border-color: #00f2ff;
+}
+
+.shm-highlight-frame.style-target .shm-highlight-label {
+    background: #00f2ff;
+    color: #000000;
+}
+
+/* Target element markers (Logic only, no layout impact) */
+.shm-custom-target-lyrics,
+.shm-custom-target-style {
+    /* We don't use outline here to avoid "double highlight" looks.
+       The JavaScript overlay handles the visual feedback. */
+    outline: none !important;
+    padding: 15px;
+}
+
+/* Regenerate Button in Frame (Bottom Left) */
+.shm-regen-btn {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: #fa5656;
+    /* Use theme color for better visibility at bottom */
+    border: none;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+    padding: 0;
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 10000002;
+}
+
+.style-target .shm-regen-btn {
+    background: #00f2ff;
+    color: #000000;
+}
+
+.shm-regen-btn:hover {
+    transform: scale(1.15) rotate(15deg);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.shm-regen-btn.spinning {
+    animation: shmSpin 1s infinite linear;
+    pointer-events: none;
+    opacity: 0.8;
+}
+
+@keyframes shmSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.shm-highlight-label {
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    /* No longer need clicks here */
+}
