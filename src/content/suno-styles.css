@@ -132,3 +132,125 @@
     pointer-events: none;
     /* No longer need clicks here */
 }
+
+/* Floating Toggle Button (Right Side) */
+.shm-floating-toggle {
+    position: fixed;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    background: #1e1e1e;
+    border: 1px solid #333333;
+    border-right: none;
+    border-radius: 12px 0 0 12px;
+    width: 40px;
+    height: 60px;
+    z-index: 9999998;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    color: #fff;
+    font-size: 20px;
+}
+
+.shm-floating-toggle:hover {
+    width: 50px;
+    background: #2a2a2a;
+    box-shadow: -6px 0 25px rgba(0, 0, 0, 0.4);
+    color: #fa5656;
+}
+
+/* Loading Animation for Targets */
+@keyframes shmPulseGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(250, 86, 86, 0.7);
+        border-color: #fa5656;
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(250, 86, 86, 0);
+        border-color: #ff9999;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(250, 86, 86, 0);
+        border-color: #fa5656;
+    }
+}
+
+.shm-loading {
+    animation: shmPulseGlow 1.5s infinite;
+    position: relative;
+    pointer-events: none; /* Prevent typing while loading */
+    opacity: 0.8;
+}
+
+.shm-loading::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-40px, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: shmSpin 0.8s linear infinite;
+    z-index: 10000003;
+    pointer-events: none;
+}
+
+.shm-loading::after {
+    content: "AI đang viết...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fa5656;
+    color: white;
+    padding: 6px 16px 6px 36px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 10000002;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Style Target Loading Color */
+.style-target .shm-loading {
+    animation-name: shmPulseCyan;
+}
+
+.style-target.shm-loading::after {
+    background: #00f2ff;
+    color: #000;
+}
+
+.style-target.shm-loading::before {
+    border-color: rgba(0, 0, 0, 0.3);
+    border-top-color: #000;
+} 
+
+
+@keyframes shmPulseCyan {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7);
+        border-color: #00f2ff;
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(0, 242, 255, 0);
+        border-color: #aaffff;
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 242, 255, 0);
+        border-color: #00f2ff;
+    }
+}
+.shm-floating-toggle img {
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+}

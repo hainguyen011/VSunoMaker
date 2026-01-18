@@ -1,22 +1,40 @@
 {
     "manifest_version": 3,
-    "name": "Suno Hit-Maker AI",
+    "name": "VSunoMaker AI",
     "version": "1.0",
     "description": "Tự động hóa sáng tác kiệt tác âm nhạc trên Suno.com với tư duy AI nhạc lý chuyên sâu.",
+    "icons": {
+        "16": "src/icons/icon.png",
+        "32": "src/icons/icon.png",
+        "48": "src/icons/icon.png",
+        "128": "src/icons/icon.png"
+    },
     "permissions": [
         "activeTab",
         "scripting",
-        "storage"
+        "storage",
+        "sidePanel",
+        "contextMenus"
     ],
     "host_permissions": [
         "https://suno.com/*"
     ],
     "action": {
         "default_popup": "src/popup/popup.html",
-        "default_title": "Suno Hit-Maker AI"
+        "default_title": "VSunoMaker AI",
+        "default_icon": {
+            "16": "src/icons/icon.png",
+            "32": "src/icons/icon.png",
+            "48": "src/icons/icon.png",
+            "128": "src/icons/icon.png"
+        }
     },
     "background": {
-        "service_worker": "src/background/background.js"
+        "service_worker": "src/background/background.js",
+        "type": "module"
+    },
+    "side_panel": {
+        "default_path": "src/popup/popup.html"
     },
     "content_scripts": [
         {

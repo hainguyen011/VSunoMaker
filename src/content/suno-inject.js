@@ -4,6 +4,43 @@
 
 console.log("Suno Hit-Maker AI: Content script V3 Active.");
 
+// Initialize Floating Button
+function initFloatingButton() {
+    if (document.querySelector('.shm-floating-toggle')) return;
+
+    const btn = document.createElement('div');
+    btn.className = 'shm-floating-toggle';
+    btn.title = 'Open VSunoMaker AI';
+    btn.innerHTML = '⚡';
+
+    btn.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: "OPEN_SIDE_PANEL" });
+    });
+
+    document.body.appendChild(btn);
+}
+
+// Check URL and inject button if on create page
+function checkAndInject() {
+    if (window.location.href.includes('/create')) {
+        initFloatingButton();
+    } else {
+        const btn = document.querySelector('.shm-floating-toggle');
+        if (btn) btn.remove();
+    }
+}
+
+// Run on load and URL change
+checkAndInject();
+let lastUrl = location.href;
+new MutationObserver(() => {
+    const url = location.href;
+    if (url !== lastUrl) {
+        lastUrl = url;
+        checkAndInject();
+    }
+}).observe(document, { subtree: true, childList: true });
+
 let highlightOverlays = {
     lyrics: null,
     style: null
@@ -20,12 +57,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         startInspector(request.targetType);
         sendResponse({ success: true });
     } else if (request.action === "AUTO_FILL") {
+        // Stop loading first
+        toggleLoadingState(false);
         fillSunoForm(request.data).then(success => {
             sendResponse({ success: success });
         });
         return true;
+    } else if (request.action === "SHOW_LOADING") {
+        toggleLoadingState(true);
+        sendResponse({ success: true });
+    } else if (request.action === "HIDE_LOADING") {
+        toggleLoadingState(false);
+        sendResponse({ success: true });
     }
 });
+
+function toggleLoadingState(isLoading) {
+    const targets = [
+        document.querySelector('.shm-custom-target-lyrics'),
+        document.querySelector('.shm-custom-target-style')
+    ];
+
+    targets.forEach(el => {
+        if (el && el.parentElement) {
+            // Add loading class to highlight frame if possible, or the element itself?
+            // The element itself is easier for now.
+            if (isLoading) {
+                el.classList.add('shm-loading');
+            } else {
+                el.classList.remove('shm-loading');
+            }
+        }
+    });
+
+    // Also toggle the highlight frames loading state?
+    // Let's rely on CSS .shm-loading on the target element for now.
+}
 
 // Sync Highlighting (Always On Top)
 function syncHighlights() {

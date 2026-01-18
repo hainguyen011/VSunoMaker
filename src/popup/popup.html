@@ -14,78 +14,196 @@
 <body>
     <div class="studio-container">
         <header>
-            <div class="logo">SUNO<span>-HM</span></div>
+            <div class="logo">VSUNO<span>-Maker</span></div>
             <div class="pulse-indicator"></div>
         </header>
 
+        <nav class="tab-bar">
+            <button class="tab-btn active" data-tab="compose">Sáng tác</button>
+            <button class="tab-btn" data-tab="studio">Studio</button>
+            <button class="tab-btn" data-tab="history">Lịch sử</button>
+            <button class="tab-btn" data-tab="settings">Cài đặt</button>
+        </nav>
+
         <main>
-            <div class="input-panel">
-                <label>GEMINI API KEY</label>
-                <input type="password" id="api-key" placeholder="Nhập API Key của bạn..."
-                    style="width: 100%; padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: white; margin-bottom: 20px; font-size: 0.7rem;">
+            <!-- TAB: COMPOSE -->
+            <div id="tab-compose" class="tab-content active">
+                <div class="input-panel">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <!-- Input Mode Toggle -->
+                        <div class="mode-switch">
+                            <span class="mode-label active" id="mode-concept">Ý Tưởng</span>
+                            <label class="switch">
+                                <input type="checkbox" id="input-mode-toggle">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="mode-label" id="mode-lyrics">Lời Bài Hát</span>
+                        </div>
 
-                <label>NGHỆ SĨ TRUYỀN CẢM HỨNG (ARTIST STYLE)</label>
-                <input type="text" id="artist-input" placeholder="Ví dụ: Sơn Tùng M-TP, Mỹ Tâm..."
-                    style="width: 100%; padding: 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; color: white; margin-bottom: 20px; font-size: 0.85rem; outline: none;">
-
-                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                    <div style="flex: 1;">
-                        <label>GIỚI TÍNH (VOCAL)</label>
-                        <select id="vocal-gender"
-                            style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
-                            <option value="Random">Ngẫu nhiên</option>
-                            <option value="Male Vocals">Nam (Male)</option>
-                            <option value="Female Vocals">Nữ (Female)</option>
-                            <option value="Duet Vocals">Song ca (Duet)</option>
-                        </select>
+                        <!-- Instrumental Checkbox -->
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="instrumental-mode" class="custom-checkbox">
+                            <label for="instrumental-mode">Instrumental</label>
+                        </div>
                     </div>
-                    <div style="flex: 1;">
-                        <label>VÙNG MIỀN (ACCENT)</label>
-                        <select id="vocal-region"
-                            style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
-                            <option value="Standard">Chuẩn (Standard)</option>
-                            <option value="Northern">Miền Bắc (Northern)</option>
-                            <option value="Central">Miền Trung (Central)</option>
-                            <option value="Southern">Miền Nam (Southern)</option>
-                        </select>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin-bottom: 0;" id="input-label">Ý TƯỞNG (CONCEPT)</label>
+                        <div class="inspector-tools">
+                            <button class="icon-btn" id="magic-polish" title="✨ Sửa lời vần điệu (Magic Polish)">✨
+                                P</button>
+                            <button class="icon-btn" id="inspect-lyrics" title="Soi vùng Lyrics">✎ L</button>
+                            <button class="icon-btn" id="inspect-style" title="Soi vùng Style">✎ S</button>
+                        </div>
+                    </div>
+                    <textarea id="lyrics-input"
+                        placeholder="Ví dụ: Một bài ballad V-pop tâm trạng, nói về sự nuối tiếc trong những đêm mưa..."
+                        style="text-align: left; min-height: 350px;"></textarea>
+
+                    <label>NGHỆ SĨ TRUYỀN CẢM HỨNG</label>
+                    <input type="text" id="artist-input" placeholder="Ví dụ: Sơn Tùng M-TP..."
+                        style="color: white; margin-bottom: 20px; ">
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <label>GIỚI TÍNH (VOCAL)</label>
+                            <select id="vocal-gender"
+                                style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
+                                <option value="Random">Ngẫu nhiên</option>
+                                <option value="Male Vocals">Nam (Male)</option>
+                                <option value="Female Vocals">Nữ (Female)</option>
+                                <option value="Duet Vocals">Song ca (Duet)</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label>VÙNG MIỀN</label>
+                            <select id="vocal-region"
+                                style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
+                                <option value="Standard">Chuẩn</option>
+                                <option value="Northern">Miền Bắc</option>
+                                <option value="Central">Miền Trung</option>
+                                <option value="Southern">Miền Nam</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="vibe-selector">
+                        <div class="vibe-chip active" data-vibe="V-Pop Viral">V-Pop Viral</div>
+                        <div class="vibe-chip" data-vibe="Indie Chill">Indie Chill</div>
+                        <div class="vibe-chip" data-vibe="Vinahouse Hit">Vinahouse</div>
+                        <div class="vibe-chip" data-vibe="US-UK Modern">US-UK Pop</div>
+                        <div class="vibe-chip" data-vibe="K-Pop Star">K-Pop</div>
+                        <div class="vibe-chip" data-vibe="Lofi HipHop">Lo-fi</div>
+                        <div class="vibe-chip" data-vibe="EDM Festival">EDM</div>
+                        <div class="vibe-chip" data-vibe="Rock Ballad">Rock</div>
+                    </div>
+
+                    <div class="input-panel custom-vibe-panel">
+                        <label>VIBE TÙY CHỈNH (CUSTOM)</label>
+                        <input type="text" id="custom-vibe-input" placeholder="Ví dụ: Bolero, Jazz, Funk...">
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <label style="margin-bottom: 0;">Ý TƯỞNG KIỆT TÁC (CONCEPT)</label>
-                    <div class="inspector-tools">
-                        <button class="icon-btn" id="inspect-lyrics" title="Soi vùng Lyrics">✎ L</button>
-                        <button class="icon-btn" id="inspect-style" title="Soi vùng Style">✎ S</button>
+                <div class="action-zone">
+                    <button id="compose-btn" class="glow-button">
+                        TẠO HIT NGAY
+                    </button>
+                </div>
+
+                <div id="status-log" class="console-box">
+                    > Studio Ready...
+                </div>
+            </div>
+
+            <!-- TAB: HISTORY -->
+            <div id="tab-history" class="tab-content">
+                <div class="history-list" id="history-container">
+                    <div class="empty-state">Chưa có lịch sử sáng tác.</div>
+                </div>
+            </div>
+
+            <!-- TAB: SETTINGS -->
+            <div id="tab-settings" class="tab-content">
+                <!-- ... existing settings content ... -->
+                <div class="input-panel">
+                    <label>GEMINI API KEY</label>
+                    <input type="password" id="api-key" placeholder="Nhập API Key của bạn..."
+                        style="width: 100%; padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: white; margin-bottom: 20px; font-size: 0.7rem;">
+                </div>
+
+                <div class="settings-footer">
+                    <small>Version 1.2 - Pro</small>
+                </div>
+            </div>
+
+            <!-- TAB: STUDIO (Previously Advanced) -->
+            <div id="tab-studio" class="tab-content">
+                <!-- 1. Custom Persona -->
+                <div class="input-panel" style="margin-bottom: 12px;">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; cursor: pointer;"
+                        onclick="toggleSection('section-persona')">
+                        <label style="cursor: pointer;">NHÂN CÁCH AI (PERSONA)</label>
+                    </div>
+                    <div id="section-persona">
+                        <textarea id="custom-system-prompt"
+                            placeholder="Ví dụ: Bạn là Hit-Maker chuyên dòng nhạc Vinahouse..."
+                            style="min-height: 60px; font-size: 0.75rem; margin-bottom: 0;"></textarea>
                     </div>
                 </div>
-                <textarea id="concept-input"
-                    placeholder="Ví dụ: Một bài ballad V-pop tâm trạng, nói về sự nuối tiếc trong những đêm mưa..."></textarea>
-            </div>
 
-            <div class="vibe-selector">
-                <div class="vibe-chip active" data-vibe="V-Pop Viral">V-Pop Viral</div>
-                <div class="vibe-chip" data-vibe="Indie Chill">Indie Chill</div>
-                <div class="vibe-chip" data-vibe="Vinahouse Hit">Vinahouse</div>
-                <div class="vibe-chip" data-vibe="US-UK Modern">US-UK Pop</div>
-                <div class="vibe-chip" data-vibe="K-Pop Star">K-Pop</div>
-                <div class="vibe-chip" data-vibe="Lofi HipHop">Lo-fi</div>
-                <div class="vibe-chip" data-vibe="EDM Festival">EDM</div>
-                <div class="vibe-chip" data-vibe="Rock Ballad">Rock</div>
-            </div>
+                <!-- 2. Structure Builder -->
+                <div class="input-panel" style="margin-bottom: 12px;">
+                    <div class="panel-header" style="display: flex; justify-content: space-between; cursor: pointer;"
+                        onclick="toggleSection('section-structure')">
+                        <label style="cursor: pointer;">CẤU TRÚC (STRUCTURE)</label>
+                    </div>
+                    <div id="section-structure">
+                        <div id="structure-display" class="structure-display">
+                            <span class="placeholder-text">Chưa chọn...</span>
+                        </div>
+                        <div class="structure-controls">
+                            <!-- Buttons added via JS or static? Static for now -->
+                            <button class="struct-btn" data-part="Intro">Intro</button>
+                            <button class="struct-btn" data-part="Verse">Verse</button>
+                            <button class="struct-btn" data-part="Chorus">Chorus</button>
+                            <button class="struct-btn" data-part="Bridge">Bridge</button>
+                            <button class="struct-btn" data-part="Drop">Drop</button>
+                            <button class="struct-btn" data-part="Outro">End</button>
+                            <button class="struct-btn clear-btn" id="clear-structure">×</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="custom-vibe-panel">
-                <label>VIBE TÙY CHỈNH (CUSTOM)</label>
-                <input type="text" id="custom-vibe-input" placeholder="Ví dụ: Bolero, Jazz, Funk...">
-            </div>
+                <!-- 3. See The Sound (Image to Music) -->
+                <div class="input-panel" style="margin-bottom: 12px;">
+                    <label>SEE THE SOUND (NHÌN LÀ NGHE)</label>
+                    <div class="image-upload-box" id="image-upload-box">
+                        <span id="image-upload-text">Kéo thả hoặc Click để tải ảnh</span>
+                        <input type="file" id="image-input" accept="image/*" style="display: none;">
+                    </div>
+                </div>
 
-            <div class="action-zone">
-                <button id="compose-btn" class="glow-button">
-                    TẠO HIT NGAY
-                </button>
-            </div>
+                <!-- 4. Style Fusion -->
+                <div class="input-panel" style="margin-bottom: 12px;">
+                    <label>STYLE FUSION (LAI TẠO)</label>
+                    <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                        <input type="text" id="style-a" placeholder="Style 1 (V-Pop)"
+                            style="flex: 1; font-size: 0.75rem;">
+                        <input type="text" id="style-b" placeholder="Style 2 (Jazz)"
+                            style="flex: 1; font-size: 0.75rem;">
+                    </div>
+                    <button class="action-btn" id="btn-fuse-style">LAI TẠO STYLE</button>
+                </div>
 
-            <div id="status-log" class="console-box">
-                > Studio Ready...
+                <!-- 5. Clone The Vibe -->
+                <div class="input-panel">
+                    <label>CLONE THE VIBE (SAO CHÉP)</label>
+                    <textarea id="clone-input" placeholder="Dán lời bài hát hoặc mô tả bài hát gốc..."
+                        style="min-height: 60px; font-size: 0.75rem; margin-bottom: 8px;"></textarea>
+                    <button class="action-btn" id="btn-clone-vibe">DỊCH NGƯỢC STYLE</button>
+                </div>
             </div>
         </main>
 
