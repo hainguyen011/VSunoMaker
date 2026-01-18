@@ -5,9 +5,12 @@
     --border-color: #333333;
 
     /* Accents */
-    --primary-color: #fa5656;    /* Suno Coral */
-    --accent-color: #fa5656;     /* Cyber Cyan */
-    --success-color: #00ff00;    /* Status Green */
+    --primary-color: #fa5656;
+    /* Suno Coral */
+    --accent-color: #fa5656;
+    /* Cyber Cyan */
+    --success-color: #00ff00;
+    /* Status Green */
 
     /* Text */
     --text-primary: #ffffff;
@@ -15,7 +18,7 @@
     --text-dim: #666666;
 
     /* --- TYPOGRAPHY --- */
-    --font-main: 'Inter', sans-serif;
+    --font-main: "Barlow", sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
     --font-size-base: 10px;
     --font-size-sm: 0.85rem;
@@ -26,7 +29,7 @@
     --element-radius: 16px;
     --btn-radius: 8px;
     --chip-radius: 8px;
-    
+
     /* --- COMPONENT TOKEN MAPPING (Internal Use) --- */
     --bg: var(--bg-color);
     --panel: var(--panel-color);
@@ -72,7 +75,8 @@ body {
     background-color: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
-    overflow: hidden; /* Prevent body scroll, handle in main */
+    overflow: hidden;
+    /* Prevent body scroll, handle in main */
 }
 
 .studio-container {
@@ -173,11 +177,13 @@ textarea {
     min-height: 90px;
     resize: vertical;
     margin-bottom: 16px;
+    padding: 12px;
 }
 
 .vibe-selector {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Default 2 cols for narrow side panel */
+    grid-template-columns: repeat(4, 1fr);
+    /* Default 2 cols for narrow side panel */
     gap: 8px;
     margin-bottom: 16px;
 }
@@ -298,7 +304,8 @@ footer {
 /* --- TABS --- */
 .tab-bar {
     display: flex;
-    margin: 0 0 24px 0;
+    margin: 24px;
+    margin-top: 14px;
     padding: 4px;
     border-radius: var(--element-radius);
     border: 1px solid var(--border);
@@ -329,7 +336,8 @@ footer {
 }
 
 .tab-btn.active {
-    color: white !important; /* Force black text for contrast on bright active chip */
+    color: white !important;
+    /* Force black text for contrast on bright active chip */
     background: rgba(255, 255, 255, 0.222);
 }
 
@@ -344,8 +352,15 @@ footer {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- HISTORY --- */
@@ -437,7 +452,10 @@ footer {
 .slider {
     position: absolute;
     cursor: pointer;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: #444;
     transition: .4s;
     border-radius: 18px;
@@ -455,11 +473,11 @@ footer {
     border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--accent);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(14px);
 }
 
@@ -548,8 +566,15 @@ input:checked + .slider:before {
 }
 
 @keyframes popIn {
-    from { transform: scale(0.5); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .structure-controls {

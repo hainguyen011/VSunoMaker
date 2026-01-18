@@ -11,7 +11,7 @@ function initFloatingButton() {
     const btn = document.createElement('div');
     btn.className = 'shm-floating-toggle';
     btn.title = 'Open VSunoMaker AI';
-    btn.innerHTML = '⚡';
+    btn.innerHTML = 'V';
 
     btn.addEventListener('click', () => {
         chrome.runtime.sendMessage({ action: "OPEN_SIDE_PANEL" });
