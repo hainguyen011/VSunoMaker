@@ -642,8 +642,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const inspectLyricsBtn = document.getElementById('inspect-lyrics');
     const inspectStyleBtn = document.getElementById('inspect-style');
 
-    if (inspectLyricsBtn) inspectLyricsBtn.addEventListener('click', () => startInspector('lyrics'));
-    if (inspectStyleBtn) inspectStyleBtn.addEventListener('click', () => startInspector('style'));
+    if (inspectLyricsBtn) inspectLyricsBtn.addEventListener('click', () => toggleInspector('lyrics', inspectLyricsBtn));
+    if (inspectStyleBtn) inspectStyleBtn.addEventListener('click', () => toggleInspector('style', inspectStyleBtn));
+
+    let activeInspectorType = null;
+
+    async function toggleInspector(type, btnElement) {
+        // If clicking the current active button -> Turn OFF
+        if (activeInspectorType === type) {
+            updateLog(`Studio: Đã tắt chế độ soi.`);
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab) chrome.tabs.sendMessage(tab.id, { action: "CLEAR_TARGET", targetType: type });
+
+            // Visual Update
+            btnElement.classList.remove('active');
+            activeInspectorType = null;
+        }
+        // If clicking a different button -> Turn OFF old, Turn ON new
+        else {
+            if (activeInspectorType) {
+                // Remove active class from previous button
+                const prevBtn = activeInspectorType === 'lyrics' ? inspectLyricsBtn : inspectStyleBtn;
+                if (prevBtn) prevBtn.classList.remove('active');
+            }
+
+            // Turn ON new
+            activeInspectorType = type;
+            btnElement.classList.add('active');
+            startInspector(type);
+        }
+    }
 
     async function startInspector(type) {
         updateLog(`Studio: Đang soi vùng ${type.toUpperCase()}...`);
