@@ -74,6 +74,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true });
         return true;
     }
+
+    // 7. Get all works
+    if (request.action === "GET_WORKS") {
+        chrome.storage.local.get(['created_works'], (res) => {
+            sendResponse({ success: true, data: res.created_works || [] });
+        });
+        return true;
+    }
+
+    // 8. Delete a work
+    if (request.action === "DELETE_WORK") {
+        deleteWork(request.workId)
+            .then(() => sendResponse({ success: true }))
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
+    }
+
+    // 9. Clear all works
+    if (request.action === "CLEAR_WORKS") {
+        chrome.storage.local.set({ created_works: [], tracked_song_ids: [] }, () => {
+            sendResponse({ success: true });
+        });
+        return true;
+    }
 });
 
 // --- HELPER FUNCTIONS ---
@@ -92,6 +116,23 @@ async function handleComposition(request) {
     if (!jsonMatch) throw new Error("AI không trả về đúng định dạng JSON.");
 
     return JSON.parse(jsonMatch[0]);
+}
+
+async function deleteWork(workId) {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get(['created_works'], (res) => {
+            let works = res.created_works || [];
+            works = works.filter(w => w.id !== workId);
+
+            chrome.storage.local.set({ created_works: works }, () => {
+                if (chrome.runtime.lastError) {
+                    reject(chrome.runtime.lastError);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    });
 }
 
 // --- CONTEXT MENU ---

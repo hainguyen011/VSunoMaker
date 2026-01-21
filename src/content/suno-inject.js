@@ -325,3 +325,389 @@ async function fillSunoForm(data) {
         return false;
     }
 }
+
+// ============================================
+// WORKS TRACKING SYSTEM (Phase 2)
+// ============================================
+
+let trackedSongIds = new Set();
+let songTrackingObserver = null;
+let lastTrackedTime = 0;
+const TRACK_DEBOUNCE_MS = 2000; // Reduced from 3000 to 2000 for faster detection
+let scanAttempts = 0;
+
+/**
+ * Initialize song tracking system
+ * Monitors DOM for new song elements appearing after creation
+ */
+function initSongTracking() {
+    console.log("[VSunoMaker] ========================================");
+    console.log("[VSunoMaker] Initializing song tracking system...");
+    console.log("[VSunoMaker] ========================================");
+
+    // Load previously tracked IDs to avoid duplicates
+    chrome.storage.local.get(['tracked_song_ids'], (res) => {
+        if (res.tracked_song_ids) {
+            trackedSongIds = new Set(res.tracked_song_ids);
+            console.log(`[VSunoMaker] Loaded ${trackedSongIds.size} previously tracked song IDs`);
+        }
+    });
+
+    // Start observing DOM for new songs
+    startSongObserver();
+
+    // Scan immediately on page load
+    console.log("[VSunoMaker] Running initial scan...");
+    setTimeout(() => scanForNewSongs(), 1000);
+
+    // Scan again after 3 seconds (in case songs are still loading)
+    setTimeout(() => {
+        console.log("[VSunoMaker] Running delayed scan...");
+        scanForNewSongs();
+    }, 3000);
+
+    // Scan again after 6 seconds
+    setTimeout(() => {
+        console.log("[VSunoMaker] Running final delayed scan...");
+        scanForNewSongs();
+    }, 6000);
+
+    // Set up periodic rescans every 10 seconds to catch newly completed songs
+    setInterval(() => {
+        console.log("[VSunoMaker] Running periodic scan...");
+        scanForNewSongs();
+    }, 10000);
+}
+
+/**
+ * Start MutationObserver to detect new song elements
+ */
+function startSongObserver() {
+    if (songTrackingObserver) return; // Already running
+
+    songTrackingObserver = new MutationObserver((mutations) => {
+        // Debounce: Don't check too frequently
+        const now = Date.now();
+        if (now - lastTrackedTime < TRACK_DEBOUNCE_MS) return;
+
+        // Check if any mutations added new nodes
+        let hasNewNodes = false;
+        for (const mutation of mutations) {
+            if (mutation.addedNodes.length > 0) {
+                hasNewNodes = true;
+                break;
+            }
+        }
+
+        if (hasNewNodes) {
+            console.log("[VSunoMaker] DOM mutation detected, scanning for new songs...");
+            scanForNewSongs();
+        }
+    });
+
+    // Observe the entire document for changes
+    songTrackingObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    console.log("[VSunoMaker] Song observer started");
+}
+
+/**
+ * Scan the page for new song elements
+ * Tries multiple selectors to find song cards/items
+ */
+function scanForNewSongs() {
+    scanAttempts++;
+    console.log(`[VSunoMaker] ========================================`);
+    console.log(`[VSunoMaker] Scan attempt #${scanAttempts}`);
+    console.log(`[VSunoMaker] ========================================`);
+
+    // Common patterns for song elements on music platforms
+    const possibleSelectors = [
+        '[class*="song"]',
+        '[class*="track"]',
+        '[class*="playlist-item"]',
+        '[class*="music-card"]',
+        '[data-testid*="song"]',
+        '[data-testid*="track"]',
+        'article',
+        '[role="article"]',
+        '[class*="card"]',
+        '[class*="item"]'
+    ];
+
+    let foundSongs = [];
+    let totalElements = 0;
+
+    // Try each selector
+    for (const selector of possibleSelectors) {
+        try {
+            const elements = document.querySelectorAll(selector);
+            totalElements += elements.length;
+
+            if (elements.length > 0) {
+                console.log(`[VSunoMaker] Selector "${selector}" found ${elements.length} elements`);
+            }
+
+            elements.forEach(el => {
+                const songData = extractSongData(el);
+                if (songData && songData.id && !trackedSongIds.has(songData.id)) {
+                    console.log(`[VSunoMaker] ✅ New song found with selector "${selector}":`, songData.title);
+                    foundSongs.push(songData);
+                }
+            });
+
+            // If we found songs with this selector, stop trying others
+            if (foundSongs.length > 0) break;
+        } catch (e) {
+            console.error(`[VSunoMaker] Error with selector "${selector}":`, e);
+        }
+    }
+
+    console.log(`[VSunoMaker] Scan results: ${totalElements} total elements checked, ${foundSongs.length} new songs found`);
+
+    // Track new songs
+    if (foundSongs.length > 0) {
+        console.log(`[VSunoMaker] 🎵 Found ${foundSongs.length} new song(s) to track!`);
+        foundSongs.forEach(song => trackNewSong(song));
+    } else {
+        console.log(`[VSunoMaker] No new songs found in this scan`);
+    }
+
+    console.log(`[VSunoMaker] Currently tracking ${trackedSongIds.size} songs total`);
+}
+
+/**
+ * Extract song metadata from a DOM element
+ * Returns null if element doesn't look like a song or if song is not complete
+ */
+function extractSongData(element) {
+    try {
+        // Check if this element is actually a song card
+        // Suno typically uses specific classes or data attributes
+        const isSongCard = element.classList.contains('song') ||
+            element.classList.contains('track') ||
+            element.querySelector('[class*="song"]') ||
+            element.querySelector('[class*="track"]') ||
+            element.hasAttribute('data-song-id') ||
+            element.hasAttribute('data-track-id');
+
+        if (!isSongCard) return null;
+
+        // Check for loading/generating status indicators
+        // Skip if song is still being generated
+        const isGenerating = element.querySelector('[class*="loading"]') ||
+            element.querySelector('[class*="generating"]') ||
+            element.querySelector('[class*="processing"]') ||
+            element.querySelector('[class*="pending"]') ||
+            element.textContent.includes('Generating') ||
+            element.textContent.includes('Processing') ||
+            element.textContent.includes('Loading');
+
+        if (isGenerating) {
+            console.log('[VSunoMaker] Skipping song - still generating');
+            return null;
+        }
+
+        // Try to find song ID from various attributes
+        const id = element.id ||
+            element.dataset.id ||
+            element.dataset.songId ||
+            element.dataset.trackId ||
+            element.getAttribute('data-song-id') ||
+            element.getAttribute('data-track-id') ||
+            element.getAttribute('id');
+
+        // If no ID found, try to extract from URL in links
+        if (!id) {
+            const linkEl = element.querySelector('a[href*="/song/"]');
+            if (linkEl) {
+                const match = linkEl.href.match(/\/song\/([^\/\?]+)/);
+                if (match) {
+                    const extractedId = match[1];
+                    console.log('[VSunoMaker] Extracted ID from URL:', extractedId);
+                }
+            }
+        }
+
+        if (!id) {
+            console.log('[VSunoMaker] No ID found for element');
+            return null;
+        }
+
+        // Try to find title - Suno usually has title in specific elements
+        const titleEl = element.querySelector('[class*="title"]') ||
+            element.querySelector('[class*="name"]') ||
+            element.querySelector('h1, h2, h3, h4, h5') ||
+            element.querySelector('[data-testid*="title"]');
+
+        let title = titleEl?.textContent?.trim() || '';
+
+        // Clean up title (remove extra whitespace, newlines)
+        title = title.replace(/\s+/g, ' ').trim();
+
+        // If title is too short or generic, it might not be a real song
+        if (!title || title.length < 2) {
+            console.log('[VSunoMaker] Invalid title:', title);
+            return null;
+        }
+
+        // Try to find thumbnail/image
+        const imgEl = element.querySelector('img');
+        const thumbnailUrl = imgEl?.src || imgEl?.dataset.src || imgEl?.getAttribute('src') || '';
+
+        // Try to find link/URL
+        const linkEl = element.querySelector('a[href*="/song/"]') ||
+            element.querySelector('a[href]');
+        let songUrl = linkEl?.href || '';
+
+        // If no direct link, construct from ID
+        if (!songUrl && id) {
+            songUrl = `https://suno.com/song/${id}`;
+        }
+
+        // Try to find audio URL
+        const audioEl = element.querySelector('audio source, audio');
+        const audioUrl = audioEl?.src || audioEl?.dataset.src || '';
+
+        // IMPORTANT: Check if song has a play button or audio player
+        // This indicates the song is complete and playable
+        const hasPlayButton = element.querySelector('[class*="play"]') ||
+            element.querySelector('button[aria-label*="play"]') ||
+            element.querySelector('[data-testid*="play"]') ||
+            audioEl !== null;
+
+        if (!hasPlayButton) {
+            console.log('[VSunoMaker] No play button found - song may not be complete');
+            // Don't return null immediately, but mark as potentially incomplete
+        }
+
+        // Additional validation: check for duration or time indicator
+        const hasDuration = element.querySelector('[class*="duration"]') ||
+            element.querySelector('[class*="time"]') ||
+            element.textContent.match(/\d+:\d+/); // Matches time format like 2:30
+
+        console.log('[VSunoMaker] Song data extracted:', {
+            id,
+            title: title.substring(0, 50),
+            hasPlayButton,
+            hasDuration: !!hasDuration,
+            thumbnailUrl: !!thumbnailUrl,
+            songUrl
+        });
+
+        return {
+            id,
+            title,
+            thumbnailUrl,
+            songUrl,
+            audioUrl,
+            timestamp: Date.now(),
+            hasPlayButton,
+            hasDuration: !!hasDuration
+        };
+    } catch (e) {
+        console.error('[VSunoMaker] Error extracting song data:', e);
+        return null;
+    }
+}
+
+/**
+ * Track a newly created song
+ * Combines Suno metadata with VSunoMaker creation data
+ */
+function trackNewSong(sunoData) {
+    lastTrackedTime = Date.now();
+
+    // Get VSunoMaker creation data from storage
+    chrome.storage.local.get([
+        'saved_concept',
+        'saved_artist',
+        'saved_vibe',
+        'saved_gender',
+        'saved_region',
+        'created_works'
+    ], (res) => {
+        // Create complete work object
+        const work = {
+            // Unique ID
+            id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+
+            // Timestamps
+            timestamp: Date.now(),
+            createdAt: new Date().toISOString(),
+
+            // VSunoMaker data
+            concept: res.saved_concept || '',
+            artist: res.saved_artist || '',
+            vibe: res.saved_vibe || 'V-Pop Viral',
+            gender: res.saved_gender || 'Random',
+            region: res.saved_region || 'Standard',
+
+            // Suno metadata
+            sunoId: sunoData.id,
+            sunoUrl: sunoData.songUrl,
+            title: sunoData.title,
+            thumbnailUrl: sunoData.thumbnailUrl,
+            audioUrl: sunoData.audioUrl,
+
+            // Status
+            status: 'created'
+        };
+
+        // Add to works list
+        let works = res.created_works || [];
+        works.unshift(work); // Add to beginning
+
+        // Keep max 50 items
+        if (works.length > 50) {
+            works = works.slice(0, 50);
+        }
+
+        // Mark this song as tracked
+        trackedSongIds.add(sunoData.id);
+        const trackedIdsArray = Array.from(trackedSongIds);
+
+        // Save to storage
+        chrome.storage.local.set({
+            created_works: works,
+            tracked_song_ids: trackedIdsArray
+        }, () => {
+            console.log(`[VSunoMaker] ✅ Tracked new song: ${sunoData.title}`);
+
+            // Show notification
+            showTrackingNotification(sunoData.title);
+        });
+    });
+}
+
+/**
+ * Show notification when a song is tracked
+ */
+function showTrackingNotification(title) {
+    const notification = document.createElement('div');
+    notification.className = 'shm-notification shm-success';
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.2rem;">✅</span>
+            <div>
+                <div style="font-weight: 600;">Đã lưu tác phẩm!</div>
+                <div style="font-size: 0.85em; opacity: 0.8;">${title}</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 4000);
+}
+
+// Initialize tracking when on Suno
+if (window.location.href.includes('suno.com')) {
+    // Wait for page to load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSongTracking);
+    } else {
+        initSongTracking();
+    }
+}

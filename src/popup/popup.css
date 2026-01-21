@@ -423,7 +423,7 @@ footer {
     flex: 1;
     background: transparent;
     border: none;
-    padding: 8px 12px;
+    padding: 10px 12px;
     color: var(--text-dim);
     font-family: var(--font-main);
     font-size: 0.75rem;
@@ -432,6 +432,15 @@ footer {
     border-radius: 8px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tab-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
 }
 
 .tab-btn:hover {
@@ -443,6 +452,31 @@ footer {
     color: white !important;
     background: var(--accent);
     box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+}
+
+/* Disabled tab state */
+.tab-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.tab-btn.disabled:hover {
+    background: transparent;
+    color: var(--text-dim);
+}
+
+.tab-btn.disabled .dev-badge {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background: var(--accent-color);
+    color: white;
+    font-size: 0.5rem;
+    font-weight: 800;
+    padding: 2px 4px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
 }
 
 .tab-content {
@@ -1164,4 +1198,175 @@ footer {
     margin: 0;
     line-height: 1.4;
     border-left: 2px solid var(--border);
+}
+
+/* ============================================ */
+/* WORKS TAB STYLES */
+/* ============================================ */
+
+.works-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(250, 86, 86, 0.1);
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    font-family: 'Syncopate', monospace;
+    line-height: 1;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.works-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.work-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    position: relative;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.work-item:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(250, 86, 86, 0.2);
+    transform: translateY(-2px);
+}
+
+.work-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.work-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.work-timestamp {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.work-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.work-tag {
+    background: rgba(250, 86, 86, 0.1);
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    color: var(--accent);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.work-concept {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.work-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.work-action-btn {
+    flex: 1;
+    padding: 7px 10px;
+    background: rgba(250, 86, 86, 0.1);
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    border-radius: 6px;
+    color: var(--accent);
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.work-action-btn:hover {
+    background: rgba(250, 86, 86, 0.2);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.work-action-btn:active {
+    transform: translateY(0);
+}
+
+.work-action-btn.danger {
+    background: rgba(255, 59, 48, 0.1);
+    border-color: rgba(255, 59, 48, 0.3);
+    color: #ff3b30;
+}
+
+.work-action-btn.danger:hover {
+    background: rgba(255, 59, 48, 0.2);
+    border-color: #ff3b30;
+}
+
+/* Success notification variant */
+.shm-notification.shm-success {
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.1) 0%, rgba(0, 200, 0, 0.15) 100%);
+    border-left-color: #00ff00;
 }

@@ -395,6 +395,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- TAB SWITCHING ---
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
+            // Prevent switching to disabled tabs
+            if (tab.classList.contains('disabled')) {
+                updateLog("⚠️ Tính năng đang phát triển - Coming Soon!");
+                return;
+            }
+
             tabs.forEach(t => t.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
 
@@ -831,4 +837,237 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMultiSelectChips('vocal-traits');
     setupMultiSelectChips('vocal-presets');
     setupMultiSelectChips('emotion-chips');
+
+    // ============================================
+    // WORKS TAB LOGIC
+    // ============================================
+
+    const worksContainer = document.getElementById('works-container');
+    const btnRefreshWorks = document.getElementById('btn-refresh-works');
+    const btnClearWorks = document.getElementById('btn-clear-works');
+    const totalWorksEl = document.getElementById('total-works');
+    const thisWeekWorksEl = document.getElementById('this-week-works');
+
+    // Load works when Works tab is clicked
+    tabs.forEach(tab => {
+        const originalClickHandler = tab.onclick;
+        tab.addEventListener('click', () => {
+            if (tab.dataset.tab === 'works') {
+                loadAndRenderWorks();
+            }
+        });
+    });
+
+    // Refresh button
+    if (btnRefreshWorks) {
+        btnRefreshWorks.addEventListener('click', () => {
+            loadAndRenderWorks();
+            updateLog("Đã làm mới danh sách tác phẩm.");
+        });
+    }
+
+    // Clear all works
+    if (btnClearWorks) {
+        btnClearWorks.addEventListener('click', () => {
+            if (confirm("Bạn có chắc chắn muốn xóa toàn bộ tác phẩm không? Hành động này không thể hoàn tác!")) {
+                chrome.runtime.sendMessage({ action: "CLEAR_WORKS" }, (response) => {
+                    if (response && response.success) {
+                        loadAndRenderWorks();
+                        updateLog("Đã xóa tất cả tác phẩm!");
+                    } else {
+                        updateLog("Lỗi: Không thể xóa tác phẩm.");
+                    }
+                });
+            }
+        });
+    }
+
+    function loadAndRenderWorks() {
+        chrome.storage.local.get(['created_works'], (res) => {
+            const works = res.created_works || [];
+            renderWorks(works);
+            updateWorksStats(works);
+        });
+    }
+
+    function renderWorks(works) {
+        if (!worksContainer) return;
+
+        worksContainer.innerHTML = '';
+
+        if (!works || works.length === 0) {
+            worksContainer.innerHTML = '<div class="empty-state">Chưa có tác phẩm nào. Hãy tạo bài hát đầu tiên!</div>';
+            return;
+        }
+
+        works.forEach((work, index) => {
+            const el = document.createElement('div');
+            el.className = 'work-item';
+
+            const date = new Date(work.timestamp);
+            const timeStr = date.toLocaleString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Determine title: use Suno title if available, otherwise use concept preview
+            const displayTitle = work.title || work.concept.substring(0, 60) + (work.concept.length > 60 ? '...' : '');
+
+            el.innerHTML = `
+                <div class="work-header">
+                    <div style="flex: 1;">
+                        <div class="work-title">${escapeHtml(displayTitle)}</div>
+                        <div class="work-timestamp">📅 ${timeStr}</div>
+                    </div>
+                </div>
+                
+                <div class="work-meta">
+                    ${work.vibe ? `<span class="work-tag">🎵 ${escapeHtml(work.vibe)}</span>` : ''}
+                    ${work.gender && work.gender !== 'Random' ? `<span class="work-tag">🎤 ${escapeHtml(work.gender)}</span>` : ''}
+                    ${work.artist ? `<span class="work-tag">🎨 ${escapeHtml(work.artist)}</span>` : ''}
+                    ${work.sunoId ? `<span class="work-tag">✅ Suno</span>` : ''}
+                </div>
+                
+                <div class="work-concept">${escapeHtml(work.concept)}</div>
+                
+                <div class="work-actions">
+                    <button class="work-action-btn view-btn" data-index="${index}">👁️ Chi tiết</button>
+                    ${work.sunoUrl ? `<button class="work-action-btn open-btn" data-url="${escapeHtml(work.sunoUrl)}">🔗 Mở Suno</button>` : ''}
+                    <button class="work-action-btn reuse-btn" data-index="${index}">♻️ Tái sử dụng</button>
+                    <button class="work-action-btn danger delete-btn" data-work-id="${work.id}">🗑️ Xóa</button>
+                </div>
+            `;
+
+            // View details
+            el.querySelector('.view-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                showWorkDetails(work);
+            });
+
+            // Open in Suno
+            const openBtn = el.querySelector('.open-btn');
+            if (openBtn) {
+                openBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const url = e.target.dataset.url;
+                    if (url) {
+                        chrome.tabs.create({ url: url });
+                        updateLog("Đã mở bài hát trên Suno!");
+                    }
+                });
+            }
+
+            // Reuse work
+            el.querySelector('.reuse-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                reuseWork(work);
+            });
+
+            // Delete work
+            el.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteWork(work.id);
+            });
+
+            worksContainer.appendChild(el);
+        });
+    }
+
+    function updateWorksStats(works) {
+        if (totalWorksEl) totalWorksEl.innerText = works.length;
+
+        // Count works from this week
+        const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        const thisWeek = works.filter(w => w.timestamp > oneWeekAgo).length;
+        if (thisWeekWorksEl) thisWeekWorksEl.innerText = thisWeek;
+    }
+
+    function showWorkDetails(work) {
+        const details = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 THÔNG TIN TÁC PHẨM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${work.title ? `🎵 Tiêu đề: ${work.title}\n` : ''}
+${work.sunoId ? `🆔 Suno ID: ${work.sunoId}\n` : ''}
+${work.sunoUrl ? `🔗 Link: ${work.sunoUrl}\n` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ CÀI ĐẶT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎵 Vibe: ${work.vibe || 'N/A'}
+🎤 Giọng: ${work.gender || 'N/A'}
+🌍 Vùng: ${work.region || 'N/A'}
+🎨 Nghệ sĩ: ${work.artist || 'N/A'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 NỘI DUNG
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${work.concept}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        `.trim();
+
+        alert(details);
+    }
+
+    function reuseWork(work) {
+        // Populate compose form with work data
+        conceptInput.value = work.concept;
+        artistInput.value = work.artist || '';
+        selectedVibe = work.vibe || 'V-Pop Viral';
+        customVibeInput.value = '';
+
+        if (work.gender) genderSelect.value = work.gender;
+        if (work.region) regionSelect.value = work.region;
+
+        // Restore vibe chip
+        restoreVibeChip(selectedVibe);
+
+        saveState();
+
+        // Switch to compose tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        const composeTabBtn = document.querySelector('[data-tab="compose"]');
+        if (composeTabBtn) composeTabBtn.classList.add('active');
+        const composeTabContent = document.getElementById('tab-compose');
+        if (composeTabContent) composeTabContent.classList.add('active');
+
+        updateLog("Đã tái sử dụng tác phẩm! Hãy chỉnh sửa và tạo lại.");
+    }
+
+    function deleteWork(workId) {
+        if (!confirm("Bạn có chắc chắn muốn xóa tác phẩm này?")) return;
+
+        chrome.runtime.sendMessage({
+            action: "DELETE_WORK",
+            workId: workId
+        }, (response) => {
+            if (response && response.success) {
+                loadAndRenderWorks();
+                updateLog("Đã xóa tác phẩm!");
+            } else {
+                updateLog("Lỗi: Không thể xóa tác phẩm.");
+            }
+        });
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Initialize Lucide icons
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
 });

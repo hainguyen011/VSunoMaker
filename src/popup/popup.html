@@ -8,6 +8,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Syncopate:wght@400;700&display=swap"
         rel="stylesheet">
+    <script src="../lib/lucide.min.js"></script>
     <link rel="stylesheet" href="popup.css">
 </head>
 
@@ -19,10 +20,22 @@
         </header>
 
         <nav class="tab-bar">
-            <button class="tab-btn active" data-tab="compose">Sáng tác</button>
-            <button class="tab-btn" data-tab="studio">Studio</button>
-            <button class="tab-btn" data-tab="history">Lịch sử</button>
-            <button class="tab-btn" data-tab="settings">Cài đặt</button>
+            <button class="tab-btn active" data-tab="compose" title="Sáng tác">
+                <i data-lucide="music"></i>
+            </button>
+            <button class="tab-btn disabled" data-tab="works" title="🚧 Đang phát triển - Coming Soon" disabled>
+                <i data-lucide="library"></i>
+                <span class="dev-badge">DEV</span>
+            </button>
+            <button class="tab-btn" data-tab="studio" title="Studio">
+                <i data-lucide="audio-lines"></i>
+            </button>
+            <button class="tab-btn" data-tab="history" title="Lịch sử">
+                <i data-lucide="clock"></i>
+            </button>
+            <button class="tab-btn" data-tab="settings" title="Cài đặt">
+                <i data-lucide="settings"></i>
+            </button>
         </nav>
 
         <main>
@@ -123,6 +136,37 @@
                 </div>
                 <div class="history-list" id="history-container">
                     <div class="empty-state">Chưa có lịch sử sáng tác.</div>
+                </div>
+            </div>
+
+            <!-- TAB: WORKS -->
+            <div id="tab-works" class="tab-content">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    <label style="margin: 0;">TÁC PHẨM CỦA BẠN</label>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="icon-btn" id="btn-refresh-works" style="font-size: 0.65rem; padding: 4px 10px;">↻
+                            LÀM MỚI</button>
+                        <button class="icon-btn clear-btn" id="btn-clear-works"
+                            style="font-size: 0.65rem; padding: 4px 10px;">XÓA TẤT CẢ</button>
+                    </div>
+                </div>
+
+                <!-- Stats Summary -->
+                <div class="works-stats">
+                    <div class="stat-card">
+                        <span class="stat-value" id="total-works">0</span>
+                        <span class="stat-label">Tổng số</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-value" id="this-week-works">0</span>
+                        <span class="stat-label">Tuần này</span>
+                    </div>
+                </div>
+
+                <!-- Works List -->
+                <div class="works-list" id="works-container">
+                    <div class="empty-state">Chưa có tác phẩm nào. Hãy tạo bài hát đầu tiên!</div>
                 </div>
             </div>
 
