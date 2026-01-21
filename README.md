@@ -68,7 +68,7 @@ Hệ thống thông báo trạng thái đậm chất Cyberpunk/Terminal.
 
 Dự án được phát triển và duy trì bởi **Richard Nguyen (Hai Nguyen)**.
 
-<div align="center">
+<div align="left">
 
 ### **Richard Nguyen (Hai Nguyen)**
 *Full-stack Developer & AI Enthusiast*
@@ -86,6 +86,7 @@ Dự án được phát triển và duy trì bởi **Richard Nguyen (Hai Nguyen)
 
 Sản phẩm được phân phối dưới giấy phép **MIT License**.
 
-<div align="center">
+<div align="right">   
 Made with ❤️ and 🎵 by Richard Nguyen
 </div>
+

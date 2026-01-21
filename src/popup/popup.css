@@ -283,13 +283,17 @@ textarea {
     left: 0;
     width: 100%;
     height: 100%;
-    background: 
+    background:
         linear-gradient(to bottom, transparent 50%, rgba(255, 71, 87, 0.02) 50%),
         radial-gradient(circle at 50% 50%, rgba(255, 71, 87, 0.05) 0%, transparent 80%);
     background-size: 100% 4px, 100% 100%;
     pointer-events: none;
     z-index: 1;
     opacity: 0.5;
+}
+
+#compose-btn {
+    padding: 20px 0px;
 }
 
 .log-header {
@@ -323,12 +327,27 @@ textarea {
     animation: dot-pulse 1.5s infinite;
 }
 
-.log-dots span:nth-child(2) { animation-delay: 0.2s; }
-.log-dots span:nth-child(3) { animation-delay: 0.4s; }
+.log-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.log-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
 
 @keyframes dot-pulse {
-    0%, 100% { opacity: 0.2; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.2); box-shadow: 0 0 5px var(--accent); }
+
+    0%,
+    100% {
+        opacity: 0.2;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.2);
+        box-shadow: 0 0 5px var(--accent);
+    }
 }
 
 .floating-log {
@@ -341,7 +360,8 @@ textarea {
     line-height: 1.5;
     white-space: pre-wrap;
     word-break: break-word;
-    text-align: left; /* Đảm bảo luôn căn trái */
+    text-align: left;
+    /* Đảm bảo luôn căn trái */
     position: relative;
     z-index: 2;
     transition: opacity 0.3s ease;
@@ -368,8 +388,15 @@ textarea {
 }
 
 @keyframes cursor-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0;
+    }
 }
 
 footer {
@@ -404,6 +431,13 @@ footer {
     cursor: pointer;
     transition: all 0.2s;
     font-weight: 700;
+}
+
+.icon-btn.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 10px rgba(250, 86, 86, 0.4);
+    border-color: var(--accent);
 }
 
 
@@ -516,7 +550,8 @@ footer {
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
-    padding-right: 40px; /* Space for delete button */
+    padding-right: 40px;
+    /* Space for delete button */
 }
 
 .history-item:hover {
@@ -687,12 +722,12 @@ footer {
     border-radius: 50%;
 }
 
-.pro-switch input:checked + .pro-slider {
+.pro-switch input:checked+.pro-slider {
     background-color: rgba(0, 255, 0, 0.15);
     border-color: rgba(0, 255, 0, 0.3);
 }
 
-.pro-switch input:checked + .pro-slider:before {
+.pro-switch input:checked+.pro-slider:before {
     transform: translateX(16px);
     background-color: #00ff00;
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.5);
@@ -893,7 +928,8 @@ footer {
 }
 
 /* Override chips in pro-grid for better fit */
-.pro-grid .pro-chip, .pro-grid-3 .pro-chip {
+.pro-grid .pro-chip,
+.pro-grid-3 .pro-chip {
     padding: 10px 2px;
     background: var(--panel);
     border: 1px solid var(--border);
@@ -910,18 +946,21 @@ footer {
     align-items: center;
 }
 
-.pro-grid .pro-chip:hover, .pro-grid-3 .pro-chip:hover {
+.pro-grid .pro-chip:hover,
+.pro-grid-3 .pro-chip:hover {
     background: #2a2a2a;
     color: white;
 }
 
-.pro-grid .pro-chip.active, .pro-grid-3 .pro-chip.active {
+.pro-grid .pro-chip.active,
+.pro-grid-3 .pro-chip.active {
     background: var(--accent);
     color: white;
     border-color: var(--accent);
     font-weight: 700;
     box-shadow: 0 4px 15px rgba(255, 71, 87, 0.2);
 }
+
 .sub-tab-bar {
     display: flex;
     gap: 8px;
@@ -965,6 +1004,7 @@ footer {
 .sub-tab-content.active {
     display: block;
 }
+
 .feature-intro {
     font-size: 0.72rem;
     color: var(--text-secondary);
@@ -1154,8 +1194,15 @@ footer {
 }
 
 @keyframes accordionSlideIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* --- SUGGESTION BOX (SEE THE SOUND) --- */

@@ -56,6 +56,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "START_INSPECTOR") {
         startInspector(request.targetType);
         sendResponse({ success: true });
+    } else if (request.action === "STOP_INSPECTOR") {
+        stopInspector();
+        sendResponse({ success: true });
+    } else if (request.action === "CLEAR_TARGET") {
+        stopInspector(); // Ensure inspector stops
+        const type = request.targetType;
+        document.querySelectorAll(`.shm-custom-target-${type}`).forEach(el => {
+            el.classList.remove(`shm-custom-target-${type}`);
+        });
+        chrome.storage.local.remove(`custom_selector_${type}`);
+        syncHighlights();
+
+        const notification = document.createElement('div');
+        notification.className = 'shm-notification';
+        notification.innerText = `[Suno HM] Đã hủy bỏ vùng: ${type.toUpperCase()}`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 2000);
+
+        sendResponse({ success: true });
     } else if (request.action === "AUTO_FILL") {
         // Stop loading first
         toggleLoadingState(false);
