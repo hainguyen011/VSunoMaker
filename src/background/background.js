@@ -2,7 +2,7 @@
  * VSunoMaker - Background Service Worker (Refactored)
  */
 
-import { callGemini, callGeminiVision } from '../core/ai-service.js';
+import { callGemini, callGeminiVision, callGeminiAudio } from '../core/ai-service.js';
 import { Prompts } from '../core/prompts.js';
 
 // --- MESSAGE HANDLERS ---
@@ -68,7 +68,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
-    // 6. Open Side Panel
+    // 6. Analyze Audio (Multimodal)
+    if (request.action === "ANALYZE_AUDIO") {
+        callGeminiAudio(request.audioBase64, request.apiKey, request.model)
+            .then(text => {
+                try {
+                    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+                    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { lyrics: "", style: text, title: "", vibe: "", isInstrumental: false };
+                    sendResponse({ success: true, data: result });
+                } catch (e) {
+                    sendResponse({ success: true, data: { lyrics: "", style: text, title: "", vibe: "", isInstrumental: false } });
+                }
+            })
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
+    }
+
+    // 7. Open Side Panel
     if (request.action === "OPEN_SIDE_PANEL") {
         chrome.sidePanel.open({ windowId: sender.tab.windowId });
         sendResponse({ success: true });

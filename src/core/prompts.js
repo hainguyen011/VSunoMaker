@@ -153,5 +153,30 @@ export const Prompts = {
        "artist": "Tên nghệ sĩ có phong cách tương tự (nếu nhận diện được, hoặc để trống)"
     }
         `;
+    },
+
+    /**
+     * Analyze Audio Prompt
+     */
+    analyzeAudio: () => {
+        return `Bạn là một chuyên gia phân tích âm nhạc và kỹ sư âm thanh lão luyện. 
+        Tôi sẽ cung cấp cho bạn một đoạn âm thanh (MP3). Hãy lắng nghe thật kỹ và thực hiện các nhiệm vụ sau:
+        
+        1. Nhận diện Lời Bài Hát (Lyrics): Trích xuất chính xác lời bài hát nếu có. Nếu là nhạc không lời, hãy ghi [Instrumental].
+        2. Phân tích Nhạc Điệu (Melody & Harmony): Xác định tông (Key), nhịp (Tempo/BPM), cấu trúc bài hát.
+        3. Phân tích Nhạc Cụ (Instruments): Những nhạc cụ chính được sử dụng.
+        4. Phân tích Giọng Hát (Vocal Characteristics): Đặc điểm giọng (Nam/Nữ, trầm/bổng, phong cách hát).
+        5. Xác định Phong Cách (Style Tags): Bộ tag chi tiết để tái hiện lại không khí bài hát này trên Suno.
+        
+        Hãy trả về kết quả dưới định dạng JSON duy nhất như sau:
+        {
+          "lyrics": "Toàn bộ lời bài hát trích xuất được...",
+          "style": "Chuỗi style tag chi tiết (Genre, BPM, Key, Instruments, Mood, Vocal Style)",
+          "title": "Tên bài hát gốc (nếu biết) hoặc đặt tên mới phù hợp",
+          "vibe": "Mô tả ngắn gọn cảm xúc của bài hát",
+          "isInstrumental": true/false
+        }
+        
+        Lưu ý: Bạn không được thêm bất kỳ lời giải thích nào bên ngoài JSON.`;
     }
 };

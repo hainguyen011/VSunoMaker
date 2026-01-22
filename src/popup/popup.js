@@ -18,6 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const cloneInput = document.getElementById('clone-input');
     const btnCloneVibe = document.getElementById('btn-clone-vibe');
 
+    // --- HEAR THE SOUND (AUDIO) ---
+    const audioInput = document.getElementById('audio-input');
+    const audioUploadBox = document.getElementById('audio-upload-box');
+    const audioPreviewContainer = document.getElementById('audio-preview-container');
+    const audioFileName = document.getElementById('audio-file-name');
+    const btnRemoveAudio = document.getElementById('btn-remove-audio');
+    const htsResultBox = document.getElementById('hts-result-box');
+    const htsTitleText = document.getElementById('hts-title-text');
+    const htsStyleText = document.getElementById('hts-style-text');
+    const htsLyricsText = document.getElementById('hts-lyrics-text');
+    const btnApplyHts = document.getElementById('btn-apply-hts');
+
     // 1. Magic Polish (Lyrics)
     if (magicPolishBtn) {
         magicPolishBtn.addEventListener('click', () => {
@@ -151,6 +163,113 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateLog("Đã áp dụng ý tưởng từ ảnh!");
 
                 // Scroll to Top to show Compose area
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+
+    // --- HEAR THE SOUND LOGIC ---
+    if (audioUploadBox) {
+        audioUploadBox.addEventListener('click', () => audioInput.click());
+    }
+
+    if (audioInput) {
+        audioInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show Preview (just filename)
+            audioFileName.innerText = file.name;
+            audioPreviewContainer.style.display = 'flex';
+            audioUploadBox.style.display = 'none';
+
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                updateLog("Lỗi: Cần API Key để phân tích âm thanh.");
+                return;
+            }
+
+            updateLog("Hear The Sound: Đang tải và phân tích MP3...");
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64String = reader.result.split(',')[1];
+
+                chrome.runtime.sendMessage({
+                    action: "ANALYZE_AUDIO",
+                    audioBase64: base64String,
+                    apiKey: apiKey,
+                    model: "gemini-1.5-flash" // Audio analysis works best on 1.5 flash/pro
+                }, (response) => {
+                    if (response && response.success) {
+                        const data = response.data;
+                        htsTitleText.innerText = data.title || "Unknown Title";
+                        htsStyleText.innerText = data.style || "Unknown Style";
+                        htsLyricsText.innerText = data.lyrics || "[No lyrics detected]";
+                        htsResultBox.style.display = 'block';
+
+                        // Store temp data
+                        htsResultBox.dataset.title = data.title;
+                        htsResultBox.dataset.style = data.style;
+                        htsResultBox.dataset.lyrics = data.lyrics;
+                        htsResultBox.dataset.isInstrumental = data.isInstrumental;
+
+                        updateLog("Success: Đã trích xuất đặc điểm âm nhạc!");
+
+                        // Scroll result into view
+                        htsResultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        updateLog("Lỗi: " + (response.error || "Failed analyzing audio."));
+                        btnRemoveAudio.click();
+                    }
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (btnRemoveAudio) {
+        btnRemoveAudio.addEventListener('click', () => {
+            audioInput.value = "";
+            audioPreviewContainer.style.display = 'none';
+            audioUploadBox.style.display = 'flex';
+            if (htsResultBox) htsResultBox.style.display = 'none';
+        });
+    }
+
+    if (btnApplyHts) {
+        btnApplyHts.addEventListener('click', () => {
+            const title = htsResultBox.dataset.title;
+            const style = htsResultBox.dataset.style;
+            const lyrics = htsResultBox.dataset.lyrics;
+            const isInstrumental = htsResultBox.dataset.isInstrumental === 'true';
+
+            if (style) {
+                // Populate Inputs
+                customVibeInput.value = style;
+                selectedVibe = style;
+
+                if (isInstrumental) {
+                    instrumentalMode.checked = true;
+                    conceptInput.value = "Instrumental music inspired by " + title;
+                    inputModeToggle.checked = false;
+                } else {
+                    instrumentalMode.checked = false;
+                    conceptInput.value = lyrics;
+                    inputModeToggle.checked = true; // Switch to Lyrics mode
+                }
+
+                // Trigger UI updates
+                inputModeToggle.dispatchEvent(new Event('change'));
+                instrumentalMode.dispatchEvent(new Event('change'));
+
+                // Restore Vibe Chip UI
+                restoreVibeChip(""); // Clear standard chips
+
+                // Save and Notify
+                saveState();
+                updateLog("Đã áp dụng đặc điểm từ file MP3!");
+
+                // Scroll to Top
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         });
