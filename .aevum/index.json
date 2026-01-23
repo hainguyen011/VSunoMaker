@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "project": "Suno-Hit-Maker",
+  "domains": [
+    {
+      "id": "ai-gen",
+      "name": "AI Generation & Prompts",
+      "path": ".aevum/domains/ai-gen",
+      "plans": []
+    },
+    {
+      "id": "suno-interface",
+      "name": "Suno.com Interface & Automation",
+      "path": ".aevum/domains/suno-interface",
+      "plans": []
+    },
+    {
+      "id": "work-tracking",
+      "name": "Song Tracking & History",
+      "path": ".aevum/domains/work-tracking",
+      "plans": []
+    },
+    {
+      "id": "ui-popup",
+      "name": "User Interface & Popup",
+      "path": ".aevum/domains/ui-popup",
+      "plans": []
+    }
+  ],
+  "global": {
+    "architecture": "global/architecture.md",
+    "conventions": "global/conventions.md",
+    "agent_rules": "global/agent_rules.md"
+  }
+}

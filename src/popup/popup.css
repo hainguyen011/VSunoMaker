@@ -69,7 +69,7 @@ html {
 }
 
 body {
-    min-width: 320px;
+    min-width: 425px;
     min-height: 480px;
     width: 100%;
     height: 100%;
@@ -583,27 +583,30 @@ footer {
 .history-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .history-item {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--element-radius);
-    padding: 12px;
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .history-item:hover {
-    border-color: var(--accent);
-    background: #252525;
+    border-color: rgba(250, 86, 86, 0.4);
+    background: linear-gradient(135deg, rgba(35, 35, 35, 0.98) 0%, rgba(25, 25, 25, 1) 100%);
     transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(250, 86, 86, 0.15);
 }
 
 .history-item-main {
@@ -613,17 +616,18 @@ footer {
 
 .history-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .history-action-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border);
-    color: var(--text-dim);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -631,64 +635,77 @@ footer {
     transition: all 0.2s;
 }
 
+.history-action-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.5;
+}
+
 .history-action-btn:hover {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
+    background: rgba(250, 86, 86, 0.15);
+    color: var(--accent);
+    border-color: rgba(250, 86, 86, 0.3);
+    transform: scale(1.05);
 }
 
 .history-tag {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 800;
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-right: 6px;
-    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-right: 8px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
+    display: inline-block;
 }
 
 .history-tag.polish {
-    background: rgba(112, 111, 211, 0.2);
-    color: #706fd3;
-    border: 1px solid rgba(112, 111, 211, 0.4);
+    background: rgba(138, 99, 210, 0.15);
+    color: #a78bfa;
+    border: 1px solid rgba(138, 99, 210, 0.3);
 }
 
 .history-tag.compose {
-    background: rgba(52, 172, 224, 0.2);
-    color: #34ace0;
-    border: 1px solid rgba(52, 172, 224, 0.4);
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
 .vibe-tag {
-    color: var(--text-dim) !important;
-    margin-right: 6px;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin-right: 8px;
+    font-size: 0.7rem;
 }
 
 .delete-history-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     background: transparent;
-    color: var(--text-dim);
+    color: rgba(255, 255, 255, 0.3);
     border: 1px solid transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    font-size: 14px;
+    font-size: 18px;
+    font-weight: 400;
 }
 
 .delete-history-btn:hover {
-    background: rgba(255, 0, 0, 0.15);
-    color: #ff5555;
-    border-color: rgba(255, 0, 0, 0.2);
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+    transform: scale(1.05);
 }
 
 .history-concept {
-    font-size: 0.8rem;
-    color: white;
-    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 8px;
+    line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -697,10 +714,12 @@ footer {
 }
 
 .history-meta {
-    font-size: 0.65rem;
-    color: var(--text-dim);
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.4);
     display: flex;
-    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .empty-state {
@@ -1763,6 +1782,7 @@ footer {
     color: white !important;
     border: 3px solid var(--accent-color);
     padding: 8px 12px;
+    background-color: #19191b;
 }
 
 .work-detail-section label {

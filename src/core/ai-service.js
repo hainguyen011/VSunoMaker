@@ -64,3 +64,32 @@ export async function callGeminiVision(base64Image, apiKey, model = "gemini-2.5-
         throw error;
     }
 }
+
+export async function callGeminiAudio(base64Audio, apiKey, model = "gemini-2.5-flash") {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+    const payload = {
+        contents: [{
+            parts: [
+                { text: "Bạn là một chuyên gia phân tích âm nhạc. Hãy lắng nghe đoạn âm thanh này và trích xuất đặc điểm. Trả về JSON: { \"lyrics\": \"...\", \"style\": \"...\", \"title\": \"...\", \"vibe\": \"...\", \"isInstrumental\": boolean }" },
+                { inline_data: { mime_type: "audio/mpeg", data: base64Audio } }
+            ]
+        }]
+    };
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "Audio API Error");
+
+        return data.candidates[0].content.parts[0].text;
+    } catch (error) {
+        console.error("Gemini Audio Error:", error);
+        throw error;
+    }
+}

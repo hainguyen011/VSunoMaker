@@ -307,7 +307,53 @@
                         </div>
                     </div>
 
-                    <!-- 1.4. Style Fusion -->
+                    <!-- 1.4. Hear The Sound (Audio to Music) -->
+                    <div class="studio-accordion">
+                        <div class="accordion-header">
+                            <label>HEAR THE SOUND (NGHE LÀ HIỂU)</label>
+                            <div class="accordion-icon">▼</div>
+                        </div>
+                        <div class="accordion-body">
+                            <p class="feature-intro">Phân tích file MP3 để trích xuất lời, phong cách và nhạc điệu.</p>
+                            <div class="image-upload-box" id="audio-upload-box">
+                                <span id="audio-upload-text">Kéo thả hoặc Click để tải file MP3</span>
+                                <input type="file" id="audio-input" accept="audio/*" style="display: none;">
+                            </div>
+                            <div id="audio-preview-container" class="image-preview-box"
+                                style="display: none; height: auto; padding: 15px;">
+                                <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                                    <i data-lucide="music" style="color: var(--accent);"></i>
+                                    <span id="audio-file-name"
+                                        style="font-size: 0.75rem; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;">filename.mp3</span>
+                                    <button id="btn-remove-audio" class="remove-img-btn"
+                                        style="position: static;">×</button>
+                                </div>
+                            </div>
+
+                            <!-- Audio Suggestions Result Box -->
+                            <div id="hts-result-box" class="suggestion-box" style="display: none;">
+                                <div class="suggestion-content">
+                                    <div class="suggestion-item">
+                                        <span class="suggestion-label">TITLE:</span>
+                                        <p id="hts-title-text">...</p>
+                                    </div>
+                                    <div class="suggestion-item">
+                                        <span class="suggestion-label">VIBE/STYLE:</span>
+                                        <p id="hts-style-text">...</p>
+                                    </div>
+                                    <div class="suggestion-item">
+                                        <span class="suggestion-label">LYRICS:</span>
+                                        <p id="hts-lyrics-text"
+                                            style="max-height: 100px; overflow-y: auto; font-size: 0.7rem; line-height: 1.4;">
+                                            ...</p>
+                                    </div>
+                                </div>
+                                <button id="btn-apply-hts" class="action-btn">SÁNG TÁC DỰA TRÊN FILE NÀY</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1.5. Style Fusion -->
                     <div class="studio-accordion">
                         <div class="accordion-header">
                             <label>STYLE FUSION (LAI TẠO)</label>
@@ -325,7 +371,7 @@
                         </div>
                     </div>
 
-                    <!-- 1.5. Clone The Vibe -->
+                    <!-- 1.6. Clone The Vibe -->
                     <div class="studio-accordion">
                         <div class="accordion-header">
                             <label>CLONE THE VIBE (SAO CHÉP)</label>
