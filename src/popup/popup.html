@@ -77,7 +77,8 @@
                             TƯỞNG (CONCEPT)</label>
                         <textarea id="lyrics-input"
                             placeholder="Ví dụ: Một bài ballad V-pop tâm trạng, nói về sự nuối tiếc trong những đêm mưa..."
-                            style="text-align: left; min-height: 350px; padding-top: 50px;"></textarea>
+                            style="text-align: left; min-height: 350px; padding-top: 50px; margin-bottom: 0;"></textarea>
+                        <div id="lyrics-resizer" class="resize-handle"></div>
                         <div id="lyrics-render-preview" class="lyrics-render-preview" style="display: none;"></div>
                     </div>
 
@@ -210,31 +211,60 @@
 
             <!-- TAB: SETTINGS -->
             <div id="tab-settings" class="tab-content">
-                <div class="input-panel" style="margin-bottom: 12px;">
-                    <label>GEMINI API KEY</label>
-                    <input type="password" id="api-key" placeholder="Nhập API Key của bạn..."
-                        style="width: 100%; padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; color: white; margin-bottom: 0; font-size: 0.7rem;">
-                </div>
+                <div class="settings-container" style="display: flex; flex-direction: column; gap: 16px;">
 
-                <div class="input-panel">
-                    <label>PHIÊN BẢN MÔ HÌNH (MODEL)</label>
-                    <select id="gemini-model"
-                        style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
-                        <!-- Gemini 2.5 -->
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                        <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
-                        <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                    <!-- API Key Section -->
+                    <div class="input-panel" style="margin-bottom: 0;">
+                        <label>GEMINI API KEY</label>
+                        <div style="position: relative;">
+                            <input type="password" id="api-key" placeholder="Nhập API Key của bạn..."
+                                style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.8rem; padding-right: 35px;">
+                            <button id="toggle-api-visibility" class="icon-btn"
+                                style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: transparent; border: none; padding: 4px;">
+                                <i data-lucide="eye" style="width: 14px; height: 14px; opacity: 0.5;"></i>
+                            </button>
+                        </div>
+                        <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 6px; font-style: italic;">
+                            * Key của bạn được lưu cục bộ trên trình duyệt.
+                        </div>
+                    </div>
 
-                        <!-- Gemini 3.0 -->
-                        <option value="gemini-3.0-flash">Gemini 3.0 Flash</option>
-                        <option value="gemini-3.0-pro">Gemini 3.0 Pro</option>
-                        <option value="gemini-3.0-pro-deep-think">Gemini 3.0 Pro Deep Think</option>
+                    <!-- Model Selection Section -->
+                    <div class="input-panel" style="margin-bottom: 0;">
+                        <label> PHIÊN BẢN MÔ HÌNH (MODEL)</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="gemini-model"
+                                style="flex: 1; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none; cursor: pointer;">
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                                <option value="gemini-3-flash">Gemini 3 Flash</option>
+                                <option value="gemini-3-pro">Gemini 3 Pro</option>
+                            </select>
+                        </div>
+                        <button id="btn-check-models" class="glow-button"
+                            style="margin-top: 12px; font-size: 0.75rem; padding: 10px; background: linear-gradient(90deg, #fa5656, #ff8e8e);">
+                            <i data-lucide="refresh-cw"
+                                style="width: 14px; height: 14px; margin-right: 6px; vertical-align: text-bottom;"></i>
+                            Cập nhật danh sách Model
+                        </button>
+                    </div>
 
-                    </select>
-                </div>
+                    <!-- About / Info -->
+                    <div class="input-panel"
+                        style="margin-bottom: 0; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); padding: 12px; border-radius: 12px;">
+                        <label>THÔNG TIN</label>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">
+                            <span>Phiên bản:</span>
+                            <span style="color: white; font-weight: 600;">1.3.0 - Pro</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-secondary);">
+                            <span>Trạng thái:</span>
+                            <span style="color: var(--success-color); font-weight: 600;">Stable</span>
+                        </div>
+                    </div>
 
-                <div class="settings-footer">
-                    <small>Version 1.2 - Pro</small>
                 </div>
             </div>
 
@@ -272,8 +302,12 @@
                             <p class="feature-intro">Sắp xếp cấu trúc bài hát với 40+ variants chuyên nghiệp.</p>
 
                             <!-- Structure Display Area -->
-                            <div id="structure-display" class="structure-display">
-                                <span class="placeholder-text">Chưa chọn cấu trúc...</span>
+                            <!-- Structure Display Container (Wrapper) -->
+                            <div class="structure-container">
+                                <div id="structure-display" class="structure-content">
+                                    <span class="placeholder-text">Chưa chọn cấu trúc...</span>
+                                </div>
+                                <button class="struct-btn clear-btn" id="clear-structure" title="Xóa tất cả">×</button>
                             </div>
 
                             <!-- Tooltip Container -->
@@ -371,8 +405,7 @@
                                     <div class="category-dropdown" data-category="Outro-End"></div>
                                 </div>
 
-                                <!-- Clear All Button -->
-                                <button class="struct-btn clear-btn" id="clear-structure">×</button>
+                                <!-- Clear All Button moved to display area -->
                             </div>
                         </div>
                     </div>
@@ -592,7 +625,7 @@
         </div>
 
         <footer>
-            <span>AI MUSIC ENGINE v1.0</span>
+            <span>AI MUSIC ENGINE v1.3</span>
             <span id="ai-status">ONLINE</span>
         </footer>
     </div>
@@ -625,7 +658,7 @@
             </div>
         </div>
     </div>
-    <script src="popup.js"></script>
+    <script type="module" src="popup.js"></script>
 </body>
 
 </html>

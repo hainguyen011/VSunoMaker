@@ -82,7 +82,7 @@ body {
 }
 
 main::-webkit-scrollbar {
-  display: none;
+    display: none;
 }
 
 .studio-container {
@@ -161,7 +161,8 @@ main {
 
 textarea,
 input[type="password"],
-input[type="text"] {
+input[type="text"],
+select {
     width: 100%;
     background: var(--panel);
     border: 1px solid var(--border);
@@ -171,7 +172,14 @@ input[type="text"] {
     font-family: inherit;
     font-size: 0.85rem;
     outline: none;
-    transition: all 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+/* Fix for dropdown options on Windows */
+option {
+    background-color: #1e1e1e;
+    /* Hardcoded dark color often works better for options than var */
+    color: white;
 }
 
 textarea:focus,
@@ -186,6 +194,40 @@ textarea {
     resize: vertical;
     margin-bottom: 16px;
     padding: 12px;
+    resize: none;
+    /* Disable native resize */
+}
+
+/* Custom Resize Handle */
+.resize-handle {
+    height: 24px;
+    background: transparent;
+    border-radius: 0 0 16px 16px;
+    /* Match element radius bottom */
+    cursor: ns-resize;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 0;
+    z-index: 10;
+    border-top: none;
+    position: absolute;
+    left: calc(50% - 45%);
+    width: 90%;
+    bottom: calc(0px + 10px);
+}
+
+
+.resize-handle:hover::after {
+    background-color: var(--accent);
+}
+
+.resize-handle::after {
+    content: "";
+    width: 40px;
+    height: 4px;
+    background: #444;
+    border-radius: 2px;
 }
 
 .vibe-selector {
@@ -431,6 +473,7 @@ footer {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 6px;
+
     .icon-btn {
         flex-grow: 1;
     }
@@ -1262,6 +1305,7 @@ footer {
 .studio-accordion.expanded {
     border-color: var(--accent);
     background: rgba(255, 255, 255, 0.02);
+    overflow: initial;
 }
 
 .accordion-header {
@@ -1491,7 +1535,10 @@ footer {
     text-overflow: ellipsis;
 }
 
-.work-concept strong, .history-concept strong, .diff-original strong, .diff-suggested strong {
+.work-concept strong,
+.history-concept strong,
+.diff-original strong,
+.diff-suggested strong {
     color: var(--accent);
     font-weight: 800;
     text-shadow: 0 0 8px rgba(250, 86, 86, 0.4);
@@ -1547,10 +1594,12 @@ footer {
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.85);
-    display: none; /* Changed from flex to none */
+    display: none;
+    /* Changed from flex to none */
     align-items: center;
     justify-content: center;
-    z-index: 5000; /* Increased from 2000 */
+    z-index: 5000;
+    /* Increased from 2000 */
     padding: 20px;
     animation: fadeIn 0.3s ease;
 }
@@ -1683,8 +1732,13 @@ footer {
 }
 
 @keyframes rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .review-action-bar {
@@ -1740,6 +1794,7 @@ footer {
 .lyrics-container-wrapper {
     position: relative;
     width: 100%;
+    margin-bottom: 20px;
 }
 
 .lyrics-render-preview {
@@ -1758,7 +1813,7 @@ footer {
     cursor: text;
 }
 
-.lyrics-render-preview strong, 
+.lyrics-render-preview strong,
 .lyrics-render-preview b {
     color: var(--accent);
     text-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
@@ -1797,9 +1852,11 @@ footer {
     border-radius: 12px;
     padding: 15px;
     font-size: 0.85rem;
-    color: white; /* Added to ensure visibility */
+    color: white;
+    /* Added to ensure visibility */
     line-height: 1.6;
-    min-height: 60px; /* Prevent empty look */
+    min-height: 60px;
+    /* Prevent empty look */
     max-height: 250px;
     overflow-y: auto;
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1846,260 +1903,483 @@ footer {
 
 /* Structure Controls Grid */
 .structure-controls-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 16px;
-  position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+    position: relative;
 }
 
 @media (max-width: 400px) {
-  .structure-controls-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+    .structure-controls-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 
 /* Structure Category Container */
 .structure-category {
-  position: relative;
-  height: fit-content;
+    position: relative;
+    height: fit-content;
 }
 
 /* Category Button */
 .category-btn {
-  width: 100%;
-  padding: 10px 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.65rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+    width: 100%;
+    padding: 10px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .category-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-1px);
 }
 
 .category-btn.active {
-  background: rgba(250, 86, 86, 0.15);
-  border-color: var(--accent);
-  color: var(--accent);
+    background: rgba(250, 86, 86, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .category-icon {
-  font-size: 1rem;
+    font-size: 1rem;
 }
 
 .dropdown-arrow {
-  font-size: 0.5rem;
-  margin-left: auto;
-  transition: transform 0.2s;
+    font-size: 0.5rem;
+    margin-left: auto;
+    transition: transform 0.2s;
 }
 
 .category-btn.active .dropdown-arrow {
-  transform: rotate(180deg);
+    transform: rotate(180deg);
 }
 
 /* Category Dropdown */
 .category-dropdown {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 1));
-  border: 1px solid var(--accent);
-  border-radius: 8px;
-  padding: 4px;
-  z-index: 100;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 1));
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 4px;
+    z-index: 100;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 .category-dropdown.open {
-  max-height: 400px;
-  overflow-y: auto;
-  opacity: 1;
-  transform: translateY(0);
-  position: relative;
-  z-index: 1000;
-  margin-top: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    opacity: 1;
+    transform: translateY(0);
+    position: relative;
+    z-index: 1000;
+    margin-top: 8px;
 }
 
 /* Variant Option */
 .variant-option {
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid transparent;
-  border-radius: 6px;
-  margin-bottom: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .variant-option:last-child {
-  margin-bottom: 0;
+    margin-bottom: 0;
 }
 
 .variant-option:hover {
-  background: rgba(250, 86, 86, 0.15);
-  border-color: rgba(250, 86, 86, 0.3);
-  transform: translateX(2px);
+    background: rgba(250, 86, 86, 0.15);
+    border-color: rgba(250, 86, 86, 0.3);
+    transform: translateX(2px);
 }
 
 .variant-name {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 500;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
 }
 
 .variant-duration {
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: var(--font-mono);
 }
 
 /* Structure Display Area */
 .structure-display {
-  min-height: 60px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+    min-height: 60px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
 }
 
 /* Structure Tag */
 .structure-tag {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid;
-  color: white;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid;
+    color: white;
 }
 
 .structure-tag:hover {
-  filter: brightness(1.2);
+    filter: brightness(1.2);
 }
 
 .structure-tag-icon {
-  font-size: 1rem;
+    font-size: 1rem;
 }
 
 .structure-tag-name {
-  white-space: nowrap;
+    white-space: nowrap;
 }
 
 .structure-tag-remove {
-  margin-left: 4px;
-  padding: 0 4px;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  transition: color 0.2s;
+    margin-left: 4px;
+    padding: 0 4px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: color 0.2s;
 }
 
 .structure-tag-remove:hover {
-  color: #ff5f5f;
+    color: #ff5f5f;
 }
 
 /* Structure Tooltip */
 .structure-tooltip {
-  position: fixed;
-  background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 1));
-  border: 1px solid var(--accent);
-  border-radius: 12px;
-  padding: 12px 16px;
-  min-width: 200px;
-  max-width: 280px;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-5px);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed;
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(20, 20, 20, 1));
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 12px 16px;
+    min-width: 200px;
+    max-width: 280px;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .structure-tooltip.visible {
-  opacity: 1;
-  transform: translateY(0);
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .tooltip-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
 .tooltip-icon {
-  font-size: 1.2rem;
+    font-size: 1.2rem;
 }
 
 .tooltip-title {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent);
 }
 
 .tooltip-description {
-  font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.4;
-  margin-bottom: 6px;
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+    margin-bottom: 6px;
 }
 
 .tooltip-duration {
-  font-size: 0.6rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: var(--font-mono);
 }
 
 /* Clear All Button (Updated) */
 .struct-btn.clear-btn {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
-  font-size: 1.4rem;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 700;
-  grid-column: span 1;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    font-size: 1.4rem;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 700;
+    grid-column: span 1;
 }
 
 .struct-btn.clear-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: #ef4444;
-  transform: translateY(-1px);
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    transform: translateY(-1px);
+}
+
+/* --- CUSTOM SELECT COMPONENT --- */
+.custom-select-container {
+    position: relative;
+    width: 100%;
+    font-family: var(--font-main);
+}
+
+.custom-select-trigger {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--element-radius);
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.custom-select-container.open .custom-select-trigger {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(250, 86, 86, 0.2);
+}
+
+.custom-arrow {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--text-dim);
+    transition: transform 0.2s;
+}
+
+.custom-select-container.open .custom-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-options {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    max-height: 0;
+    overflow-y: auto;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: translateY(-10px);
+}
+
+.custom-select-container.open .custom-options {
+    max-height: 250px;
+    /* Limit height for long lists */
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.custom-option {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    color: #ccc;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.custom-option:last-child {
+    border-bottom: none;
+}
+
+.custom-option:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.custom-option.selected {
+    background: rgba(250, 86, 86, 0.1);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+/* Scrollbar for options */
+.custom-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-options::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+
+/* --- OVERRIDE FOR ABSOLUTE DELETE BUTTON --- */
+.structure-display {
+    position: relative !important;
+    padding-right: 40px !important;
+}
+
+.struct-btn.clear-btn {
+    position: absolute !important;
+    right: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    font-size: 1.2rem !important;
+    margin: 0 !important;
+    grid-column: auto !important;
+}
+
+
+/* --- REFACTOR FOR STRUCTURE CONTAINER --- */
+.structure-container {
+    display: flex;
+    align-items: center;
+    min-height: 60px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    position: relative;
+    padding-right: 40px;
+}
+
+/* The actual content area manipulated by JS */
+.structure-content {
+    display: flex;
+    /* Kept flex for tags */
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+}
+
+/* JS still targets ID structure-display which now has class structure-content. 
+   We need to ensure .structure-display styles don't conflict or we override them.
+   Since ID selector #structure-display is not used in CSS (only class .structure-display was), 
+   and I changed the class in HTML to 'structure-content', old styles for .structure-display won't apply?
+   Wait, in HTML: <div id='structure-display' class='structure-content'>
+   So I need to style .structure-content.
+*/
+
+/* Ensure the button is positioned relative to CONTAINER */
+.struct-btn.clear-btn {
+    top: 12px !important;
+    /* Top align with padding */
+    right: 8px !important;
+    transform: none !important;
+    /* Reset center transform */
+}
+
+
+
+/* --- HORIZONTAL TIMELINE LAYOUT --- */
+.structure-content {
+    display: flex !important;
+    /* Force single line */
+    overflow-x: auto !important;
+    /* Enable horizontal scroll */
+    gap: 8px !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding-bottom: 4px !important;
+    /* Space for scrollbar */
+    padding-right: 0 !important;
+    /* Reset padding for content */
+    mask-image: linear-gradient(to right, black 90%, transparent 100%);
+    /* Fade out effect at right edge */
+    -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%);
+}
+
+/* Hide scrollbar but keep functionality (optional, or style it thin) */
+.structure-content::-webkit-scrollbar {
+    height: 4px;
+}
+
+.structure-content::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 2px;
+}
+
+/* Ensure button stands out */
+.struct-btn.clear-btn {
+    z-index: 10;
+    background: rgba(30, 30, 30, 0.8) !important;
+    /* Slight backdrop to cover scrolling tags */
+    backdrop-filter: blur(4px);
+    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.5);
+    /* Shadow to separate from content */
+}
+
+
+
+/* --- FIX STRUCTURE DROPDOWN LAYOUT SHIFT --- */
+.category-dropdown.open {
+    position: absolute !important;
+    /* Force floating */
+    z-index: 1000 !important;
+    width: 200px !important;
+    /* Ensure min width for better readability */
+    left: 0 !important;
+    margin-top: 4px !important;
+}
+
+/* Ensure current active category is on top of others */
+.structure-category:has(.category-dropdown.open) {
+    z-index: 100 !important;
 }

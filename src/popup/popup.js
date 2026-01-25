@@ -1,12 +1,19 @@
-/**
- * Suno Hit-Maker AI - Popup Logic
- */
+import { updateLog, renderMarkdown, enableCustomResize } from '../shared/utils.js';
+import { initMagicPolish } from '../features/magic-polish/index.js';
+import { initSettings } from '../features/settings/index.js';
+import { CustomSelect } from '../shared/ui-components/custom-select.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- UI ELEMENTS ---
     const tabs = document.querySelectorAll('.tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
     let typingTimer = null;
+
+    // Initialize Features
+    // 1. Magic Polish
+    const magicPolishFeature = initMagicPolish();
+    // 2. Settings (Model Fetcher)
+    initSettings();
 
     // --- PREMIUM FEATURES (STUDIO) ---
     const magicPolishBtn = document.getElementById('magic-polish');
@@ -23,195 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const autoStyleBtn = document.getElementById('auto-style-btn');
     const musicFocusSelect = document.getElementById('music-focus');
 
-    // 1. Magic Polish (Lyrics)
-    if (magicPolishBtn) {
-        magicPolishBtn.addEventListener('click', () => {
-            // Restriction: Only work in Lyrics mode
-            if (!inputModeToggle.checked) {
-                updateLog("⚠️ Tính năng này chỉ khả dụng trong chế độ LỜI NHẠC.");
-                return;
-            }
-
-            const lyrics = conceptInput.value.trim();
-            const apiKey = apiKeyInput.value.trim();
-            if (!lyrics || !apiKey) {
-                updateLog("! Error: Cần nội dung lời và API Key.");
-                return;
-            }
-
-            updateLog("Magic Polisher: Đang phân tích vần điệu...");
-            magicPolishBtn.disabled = true;
-            magicPolishBtn.innerText = "ĐANG PHÂN TÍCH...";
-
-            chrome.runtime.sendMessage({
-                action: "POLISH_LYRICS",
-                params: {
-                    lyrics: lyrics,
-                    vibe: selectedVibe,
-                    artist: artistInput.value.trim(),
-                    language: languageSelect.value,
-                    region: regionSelect.value
-                },
-                apiKey: apiKey,
-                model: modelSelect.value
-            }, (response) => {
-                magicPolishBtn.disabled = false;
-                magicPolishBtn.innerText = "Sửa lời nhạc";
-
-                if (response && response.success) {
-                    try {
-                        const jsonMatch = response.data.match(/\[[\s\S]*\]/);
-                        if (!jsonMatch) throw new Error("AI không trả về đúng định dạng JSON.");
-                        const suggestions = JSON.parse(jsonMatch[0]);
-                        showPolishReview(suggestions);
-                        updateLog("> Success: Đã tìm thấy các đề xuất sửa vần!");
-                    } catch (e) {
-                        updateLog("Lỗi: Không thể phân tích kết quả từ AI.");
-                        console.error("Parse error:", e);
-                    }
-                } else {
-                    updateLog("Lỗi: " + (response.error || "Unknown"));
-                }
-            });
-        });
-    }
-
-    // --- POLISH REVIEW LOGIC ---
-    const reviewModal = document.getElementById('polish-review-modal');
-    const reviewList = document.getElementById('review-list');
-    const closeReviewBtn = document.getElementById('close-review');
-    const applyAllBtn = document.getElementById('apply-all-review');
-    const discardAllBtn = document.getElementById('discard-all-review');
-    let currentSuggestions = [];
-
-    function showPolishReview(suggestions) {
-        currentSuggestions = suggestions;
-        reviewList.innerHTML = '';
-
-        suggestions.forEach((item, index) => {
-            const card = document.createElement('div');
-            card.className = 'review-item';
-
-            // Score color logic
-            let scoreColor = '#fffa82'; // Yellow for mid
-            if (item.improvementScore > 80) scoreColor = '#50ff7b'; // Green for high
-            if (item.improvementScore < 50) scoreColor = '#ff5f5f'; // Red for low
-
-            card.innerHTML = `
-                <div class="review-diff-box">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-                        <span class="improvement-badge" style="background: ${scoreColor}22; color: ${scoreColor}; border: 1px solid ${scoreColor}55;">
-                            +${item.improvementScore}% Better
-                        </span>
-                    </div>
-                    <div class="diff-original">${renderMarkdown(item.original)}</div>
-                    <div class="diff-suggested">${renderMarkdown(item.suggested)}</div>
-                </div>
-                <div class="review-reason">${renderMarkdown(item.reason)}</div>
-                <div class="review-action-bar">
-                    <button class="mini-btn ghost-btn regen-btn" data-index="${index}" title="Thử phương án khác">
-                        <i data-lucide="rotate-cw"></i>
-                    </button>
-                    <button class="mini-btn apply-btn" data-index="${index}">Dùng</button>
-                </div>
-            `;
-
-            card.querySelector('.apply-btn').onclick = () => {
-                applySingleReview(item.original, item.suggested);
-                card.style.opacity = '0.5';
-                card.style.pointerEvents = 'none';
-            };
-
-            card.querySelector('.regen-btn').onclick = (e) => {
-                const btn = e.currentTarget;
-                const originalText = item.original;
-                const currentSuggested = item.suggested;
-
-                btn.disabled = true;
-                btn.classList.add('spinning');
-                card.style.opacity = '0.7';
-
-                chrome.runtime.sendMessage({
-                    action: "REGENERATE_REVIEW_ITEM",
-                    params: {
-                        original: originalText,
-                        currentSuggested: currentSuggested,
-                        vibe: selectedVibe,
-                        artist: artistInput.value.trim(),
-                        language: languageSelect.value,
-                        region: regionSelect.value
-                    },
-                    apiKey: apiKeyInput.value.trim(),
-                    model: modelSelect.value
-                }, (response) => {
-                    btn.disabled = false;
-                    btn.classList.remove('spinning');
-                    card.style.opacity = '1';
-
-                    if (response && response.success) {
-                        const newData = response.data;
-                        item.suggested = newData.suggested;
-                        item.reason = newData.reason;
-                        item.improvementScore = newData.improvementScore;
-
-                        // Update UI of the card
-                        card.querySelector('.diff-suggested').innerHTML = renderMarkdown(newData.suggested);
-                        card.querySelector('.review-reason').innerHTML = renderMarkdown(newData.reason);
-
-                        const badge = card.querySelector('.improvement-badge');
-                        badge.textContent = `+${newData.improvementScore}% Better`;
-
-                        // Update score color
-                        let scoreColor = '#fffa82';
-                        if (newData.improvementScore > 80) scoreColor = '#50ff7b';
-                        if (newData.improvementScore < 50) scoreColor = '#ff5f5f';
-                        badge.style.background = scoreColor + '22';
-                        badge.style.color = scoreColor;
-                        badge.style.border = '1px solid ' + scoreColor + '55';
-                    }
-                });
-            };
-
-            reviewList.appendChild(card);
-        });
-
-        reviewModal.style.display = 'flex';
-        if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-
-    function applySingleReview(original, suggested) {
-        let text = conceptInput.value;
-        if (text.includes(original)) {
-            text = text.replace(original, suggested);
-            conceptInput.value = text;
-            saveState();
-        }
-    }
-
-    if (closeReviewBtn) closeReviewBtn.onclick = () => reviewModal.style.display = 'none';
-    if (discardAllBtn) discardAllBtn.onclick = () => reviewModal.style.display = 'none';
-
-    if (applyAllBtn) {
-        applyAllBtn.onclick = () => {
-            let text = conceptInput.value;
-            currentSuggestions.forEach(item => {
-                if (text.includes(item.original)) {
-                    text = text.replace(item.original, item.suggested);
-                }
-            });
-            conceptInput.value = text;
-            saveState();
-
-            // SAVE TO HISTORY as Polish version
-            addToHistory(text, selectedVibe, 'polish', {
-                suggestionsCount: currentSuggestions.length,
-                originalVibe: selectedVibe
-            });
-
-            reviewModal.style.display = 'none';
-            updateLog("> Success: Đã áp dụng & lưu vào lịch sử chỉnh sửa!");
-        };
-    }
+    // 1. Magic Polish (Lyrics) - Migrated to src/features/magic-polish/
 
     // 2. See The Sound (Image Upload)
     const imagePreviewContainer = document.getElementById('image-preview-container');
@@ -598,6 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusLog = document.getElementById('status-log');
     const customVibeInput = document.getElementById('custom-vibe-input');
     const vibeChips = document.querySelectorAll('.vibe-chip');
+    const lyricsResizer = document.getElementById('lyrics-resizer');
+
+    // Enable Resizer
+    if (lyricsResizer && conceptInput) {
+        enableCustomResize(lyricsResizer, conceptInput);
+    }
 
     // New Controls (Refactored)
     const segBtnConcept = document.getElementById('seg-btn-concept');
@@ -625,6 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const regionSelect = document.getElementById('vocal-region');
     const languageSelectElement = document.getElementById('vocal-language'); // Local reference if needed
     const regionContainerElement = document.getElementById('region-container');
+
+    // --- INITIALIZE CUSTOM SELECTS ---
+    document.querySelectorAll('select').forEach(el => {
+        new CustomSelect(el);
+    });
 
     // History Tab
     const historyContainer = document.getElementById('history-container');

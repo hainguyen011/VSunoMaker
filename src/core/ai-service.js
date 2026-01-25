@@ -93,3 +93,27 @@ export async function callGeminiAudio(base64Audio, apiKey, model = "gemini-2.5-f
         throw error;
     }
 }
+
+export async function fetchModels(apiKey) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || "List Models API Error");
+
+        // Filter for 'generateContent' supported models
+        const models = data.models
+            .filter(m => m.supportedGenerationMethods.includes("generateContent"))
+            .map(m => m.name.replace('models/', '')); // return just the ID e.g. gemini-1.5-flash
+
+        return models;
+    } catch (error) {
+        console.error("Gemini List Models Error:", error);
+        throw error;
+    }
+}

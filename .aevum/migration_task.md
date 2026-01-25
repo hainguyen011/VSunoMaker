@@ -1,0 +1,21 @@
+# Task: Refactor Suno-Hit-Maker to Feature-Based Architecture
+
+- [x] **Phase 1: Setup Infrastructure**
+    - [x] Create `src/features/` and subdirectories
+    - [x] Create `src/shared/` and subdirectories
+- [x] **Phase 2: Extract "Magic Polish" (Lyrics)**
+    - [x] Extract Logic to `src/features/magic-polish/logic.js`
+    - [x] Extract UI to `src/features/magic-polish/ui.js`
+    - [x] Create Entry Point `src/features/magic-polish/index.js`
+    - [x] Integrate into `popup.js`
+- [ ] **Phase 3: Extract "See The Sound" (Image Analysis)**
+    - [ ] Extract Logic
+    - [ ] Extract UI
+    - [ ] Integrate
+- [ ] **Phase 4: Extract "Hear The Sound" (Audio Analysis)**
+    - [ ] Extract Logic
+    - [ ] Extract UI
+    - [ ] Integrate
+- [ ] **Phase 5: Cleanup & Optimization**
+    - [ ] Remove dead code from `popup.js`
+    - [ ] Verify all features work together
