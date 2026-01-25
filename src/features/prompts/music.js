@@ -7,7 +7,7 @@ export const musicPrompts = {
      * Generates the main composition prompt for Suno
      */
     composeMusic: (params) => {
-        const { concept, vibe, artist, gender, region, language, isInstrumental, isCustomLyrics, customSystemPrompt, customStructure, musicFocus } = params;
+        const { concept, vibe, artist, gender, region, language, isInstrumental, isCustomLyrics, isCleanLyrics, customSystemPrompt, customStructure, musicFocus } = params;
 
         let focusContext = "";
         if (musicFocus === 'lyrics') {
@@ -214,6 +214,12 @@ export const musicPrompts = {
            - KHÔNG ĐƯỢC phá kết cấu: Phải đặt ở những vị trí ngắt nghỉ tự nhiên hoặc cao trào cảm xúc để không làm gãy mạch phrasing của bài hát.
            - Ưu tiên sự tinh tế: Sử dụng để tạo điểm nhấn đắt giá, tránh biến bài hát thành một chuỗi ngắt quãng rời rạc.
            - Dựa vào phong cách để thêm các dấu hiệu đặc biệt
+        ${isCleanLyrics ? `
+        **6. CHẾ ĐỘ LỜI NHẠC SẠCH (CLEAN LYRICS):**
+        - BẮT BUỘC: KHÔNG ĐƯỢC sử dụng các dấu ba chấm (...) và dấu gạch ngang (-) trong lời bài hát.
+        - Hãy giữ ca từ "Sạch" (Clean), chỉ bao gồm chữ cái và các dấu câu cơ bản (phẩy, chấm).
+        - Tuyệt đối không thêm các ký hiệu điều hướng nhịp điệu vào giữa câu hoặc cuối câu.
+        ` : ""}
         
         - Nếu có lời hát trong phần đó, chỉ cần ghi thẻ [Verse], [Chorus], etc. rồi xuống dòng và viết lời ngay.
             `;

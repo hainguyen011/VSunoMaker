@@ -430,6 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const segmentedControl = document.querySelector('.mode-segmented-control');
     const inputModeToggle = document.getElementById('input-mode-toggle'); // Checked = Lyrics Mode
     const instrumentalMode = document.getElementById('instrumental-mode');
+    const cleanLyricsMode = document.getElementById('clean-lyrics-mode');
     const previewLyricsBtn = document.getElementById('preview-lyrics');
     const lyricsRenderPreview = document.getElementById('lyrics-render-preview');
 
@@ -837,7 +838,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load state
     chrome.storage.local.get([
         'gemini_api_key', 'gemini_model', 'saved_concept', 'saved_artist', 'saved_vibe', 'saved_custom_vibe',
-        'saved_gender', 'saved_region', 'prompt_history', 'saved_system_prompt', 'saved_structure', 'saved_music_focus'
+        'saved_gender', 'saved_region', 'prompt_history', 'saved_system_prompt', 'saved_structure', 'saved_music_focus',
+        'is_clean_lyrics'
     ], (res) => {
         if (res.gemini_api_key) apiKeyInput.value = res.gemini_api_key;
         if (res.gemini_model) modelSelect.value = res.gemini_model;
@@ -845,6 +847,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.saved_artist) artistInput.value = res.saved_artist;
         if (res.saved_gender) genderSelect.value = res.saved_gender;
         if (res.saved_region) regionSelect.value = res.saved_region;
+        if (res.is_clean_lyrics !== undefined && cleanLyricsMode) cleanLyricsMode.checked = res.is_clean_lyrics;
         if (res.saved_music_focus && musicFocusSelect) musicFocusSelect.value = res.saved_music_focus;
         if (res.saved_language && languageSelect) {
             languageSelect.value = res.saved_language;
@@ -907,6 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
             saved_gender: genderSelect.value,
             saved_region: regionSelect.value,
             saved_language: languageSelect ? languageSelect.value : "Vietnamese",
+            is_clean_lyrics: cleanLyricsMode ? cleanLyricsMode.checked : false,
             // Save Advanced Settings
             saved_system_prompt: customSystemPromptInput ? customSystemPromptInput.value.trim() : "",
             saved_structure: currentStructure,
@@ -934,7 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    [genderSelect, regionSelect, modelSelect, languageSelect, musicFocusSelect].forEach(el => {
+    [genderSelect, regionSelect, modelSelect, languageSelect, musicFocusSelect, cleanLyricsMode].forEach(el => {
         if (el) el.addEventListener('change', saveState);
     });
 
@@ -1196,6 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 model: modelSelect.value,
                 isInstrumental: isInstrumental,
                 isCustomLyrics: isCustomLyrics,
+                isCleanLyrics: cleanLyricsMode ? cleanLyricsMode.checked : false,
                 customSystemPrompt: customSystemPromptInput ? customSystemPromptInput.value.trim() : "",
                 customStructure: currentStructure,
                 musicFocus: musicFocusSelect ? musicFocusSelect.value : "balanced",

@@ -3,12 +3,12 @@
  */
 
 export const lyricPrompts = {
-    /**
-     * Polish Lyrics Prompt
-     */
-    polishLyrics: (params) => {
-        const { lyrics, vibe, artist, language, region } = params;
-        return `
+  /**
+   * Polish Lyrics Prompt
+   */
+  polishLyrics: (params) => {
+    const { lyrics, vibe, artist, language, region, isCleanLyrics } = params;
+    return `
     Bạn là một chuyên gia ngôn ngữ và nhạc sĩ tài ba (Lyrics Polisher).
     Nhiệm vụ: Chỉnh sửa lời bài hát dựa trên TOÀN BỘ nội dung để đảm bảo tính kết nối, vần điệu (rhyme) và mạch cảm xúc (flow).
 
@@ -38,6 +38,7 @@ export const lyricPrompts = {
     - Trả về DUY NHẤT một mảng JSON hợp lệ, không có văn bản thừa.
     - Tất cả string phải được đặt trong dấu ngoặc kép.
     - Duy trì các ký tự đặc biệt (…, —) trong nội dung JSON mà không cần escape đặc biệt.
+    ${isCleanLyrics ? '- TUYỆT ĐỐI KHÔNG sử dụng các dấu ba chấm (...) và dấu gạch ngang (-) trong lời bài hát. Hãy giữ lời nhạc sạnh (Clean).' : '- Duy trì các ký tự điều hướng nhịp điệu (…, —) nếu cần thiết để tạo cảm xúc.'}
     - Đảm bảo tính hợp lệ của cấu trúc mảng JSON.
 
     Lời gốc của người dùng:
@@ -49,14 +50,14 @@ export const lyricPrompts = {
     - Nếu toàn bộ bài hát đã tốt, trả về mảng rỗng [].
     - Chỉ trả về duy nhất mảng JSON. Không có văn bản thừa.
         `;
-    },
+  },
 
-    /**
-     * Regenerate Review Item Prompt
-     */
-    regenerateReviewItem: (params) => {
-        const { original, currentSuggested, vibe, artist, language, region } = params;
-        return `
+  /**
+   * Regenerate Review Item Prompt
+   */
+  regenerateReviewItem: (params) => {
+    const { original, currentSuggested, vibe, artist, language, region, isCleanLyrics } = params;
+    return `
     Bạn là một chuyên gia ngôn ngữ và nhạc sĩ tài ba (Lyrics Polisher).
     Nhiệm vụ: Hãy tạo ra một PHƯƠNG ÁN KHÁC (Alternative) cho đoạn lời bài hát sau.
 
@@ -84,7 +85,7 @@ export const lyricPrompts = {
     ### QUAN TRỌNG - QUY TắC JSON:
     - CHỈ trả về một JSON object duy nhất.
     - Đảm bảo string kết quả không chứa các ký tự phá vỡ cấu trúc JSON.
-    - Giữ nguyên các ký tự điều hướng nhịp điệu (…, —) trong chuỗi string JSON.
+    ${isCleanLyrics ? '- TUYỆT ĐỐI KHÔNG sử dụng các dấu ba chấm (...) và dấu gạch ngang (-) trong lời bài hát. Hãy giữ lời nhạc sạnh (Clean).' : '- Giữ nguyên các ký tự điều hướng nhịp điệu (…, —) trong chuỗi string JSON.'}
         `;
-    }
+  }
 };
