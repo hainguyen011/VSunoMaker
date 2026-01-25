@@ -3,7 +3,7 @@
  */
 
 import { callGemini, callGeminiVision, callGeminiAudio } from '../core/ai-service.js';
-import { Prompts } from '../core/prompts.js';
+import { Prompts } from '../features/prompts/index.js';
 
 // --- MESSAGE HANDLERS ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

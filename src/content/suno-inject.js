@@ -70,7 +70,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         const notification = document.createElement('div');
         notification.className = 'shm-notification';
-        notification.innerText = `[Suno HM] Đã hủy bỏ vùng: ${type.toUpperCase()}`;
+        notification.innerText = `[VSunoMaker] Đã hủy bỏ vùng: ${type.toUpperCase()}`;
         document.body.appendChild(notification);
         setTimeout(() => notification.remove(), 2000);
 
@@ -177,7 +177,7 @@ async function handleRegenerate(targetType) {
     const btn = overlay.querySelector('.shm-regen-btn');
 
     btn.classList.add('spinning');
-    console.log(`[Suno HM] Regenerating ${targetType}...`);
+    console.log(`[VSunoMaker] Regenerating ${targetType}...`);
 
     chrome.storage.local.get(['gemini_api_key', 'saved_concept', 'saved_artist', 'saved_vibe', 'saved_gender', 'saved_region'], (res) => {
         if (!res.gemini_api_key || !res.saved_concept) {
@@ -202,7 +202,7 @@ async function handleRegenerate(targetType) {
 
                 const notification = document.createElement('div');
                 notification.className = 'shm-notification';
-                notification.innerText = `[Suno HM] Đã tái tạo xong ${targetType.toUpperCase()}`;
+                notification.innerText = `[VSunoMaker] Đã tái tạo xong ${targetType.toUpperCase()}`;
                 document.body.appendChild(notification);
                 setTimeout(() => notification.remove(), 2500);
             } else {
@@ -290,7 +290,7 @@ function handleInspectorClick(e) {
         chrome.storage.local.set({ [`custom_selector_${currentTargetType}`]: true }, () => {
             const notification = document.createElement('div');
             notification.className = 'shm-notification';
-            notification.innerText = `[Suno HM] Đã khóa mục tiêu: ${currentTargetType.toUpperCase()}`;
+            notification.innerText = `[VSunoMaker] Đã khóa mục tiêu: ${currentTargetType.toUpperCase()}`;
             document.body.appendChild(notification);
             setTimeout(() => notification.remove(), 2500);
             stopInspector();
