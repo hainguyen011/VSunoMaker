@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const regionContainer = document.getElementById('region-container');
     const autoStyleBtn = document.getElementById('auto-style-btn');
     const musicFocusSelect = document.getElementById('music-focus');
+    const rhythmFlowSelect = document.getElementById('rhythm-flow');
 
     // 1. Magic Polish (Lyrics) - Migrated to src/features/magic-polish/
 
@@ -54,6 +55,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const htsStyleText = document.getElementById('hts-style-text');
     const htsLyricsText = document.getElementById('hts-lyrics-text');
     const btnApplyHts = document.getElementById('btn-apply-hts');
+    const btnSuggestLyricsHts = document.getElementById('btn-suggest-lyrics-hts');
+    let lastAudioBase64 = null; // To allow re-suggestion without re-upload
+
+    // --- AI ASSISTANTS ELEMENTS (LOBBY) ---
+    const assistantsGrid = document.getElementById('assistants-grid');
+    const btnAddAssistantPro = document.getElementById('btn-add-assistant-pro');
+
+    // Assistant Editor Modal
+    const assistantEditorModal = document.getElementById('assistant-editor-modal');
+    const closeAssistantEditor = document.getElementById('close-assistant-editor');
+    const editAssistantName = document.getElementById('edit-assistant-name');
+    const editAssistantPrompt = document.getElementById('edit-assistant-prompt');
+    const editAssistantKey = document.getElementById('edit-assistant-key');
+    const editAssistantModel = document.getElementById('edit-assistant-model');
+    const btnSaveAssistant = document.getElementById('btn-save-assistant');
+    const btnDeleteAssistant = document.getElementById('btn-delete-assistant');
+
+    let currentAssistants = [];
+    let activeAssistantId = null;
+    let editingAssistantId = null;
 
     imageUploadBox.addEventListener('click', () => imageInput.click());
 
@@ -177,18 +198,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64String = reader.result.split(',')[1];
+                lastAudioBase64 = base64String; // Save for re-suggestion
 
                 chrome.runtime.sendMessage({
                     action: "ANALYZE_AUDIO",
                     audioBase64: base64String,
                     apiKey: apiKey,
-                    model: "gemini-2.5-flash" // Audio analysis works best on 1.5 flash/pro
+                    model: "gemini-2.5-flash", // Audio analysis works best on 1.5 flash/pro
+                    params: {
+                        language: languageSelect.value,
+                        artist: artistInput.value.trim(),
+                        gender: genderSelect.value,
+                        region: regionSelect.value,
+                        musicFocus: musicFocusSelect ? musicFocusSelect.value : "balanced",
+                        customSystemPrompt: customSystemPromptInput ? customSystemPromptInput.value.trim() : "",
+                        customStructure: currentStructure,
+                        vocalTraits: Array.from(document.querySelectorAll('#vocal-traits .pro-chip.active')).map(c => c.dataset.val),
+                        vocalPresets: Array.from(document.querySelectorAll('#vocal-presets .pro-chip.active')).map(c => c.dataset.val),
+                        emotions: Array.from(document.querySelectorAll('#emotion-chips .pro-chip.active')).map(c => c.dataset.val)
+                    }
                 }, (response) => {
                     if (response && response.success) {
                         const data = response.data;
                         htsTitleText.innerText = data.title || "Unknown Title";
                         htsStyleText.innerText = data.style || "Unknown Style";
-                        htsLyricsText.innerText = data.lyrics || "[No lyrics detected]";
+
+                        // Handle Suggested Lyrics Badge/Text
+                        if (data.isSuggestedLyrics) {
+                            htsLyricsText.innerHTML = `<span style="color: #ffcc00; font-weight: 800; display: block; margin-bottom: 4px;">[ SUGGESTED LYRICS FOR BEAT ]</span>` + data.lyrics;
+                        } else {
+                            htsLyricsText.innerText = data.lyrics || "[No lyrics detected]";
+                        }
+
                         htsResultBox.style.display = 'block';
 
                         // Store temp data
@@ -197,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         htsResultBox.dataset.lyrics = data.lyrics;
                         htsResultBox.dataset.isInstrumental = data.isInstrumental;
 
-                        updateLog("Success: Đã trích xuất đặc điểm âm nhạc!");
+                        updateLog("Success: Đã " + (data.isSuggestedLyrics ? "gợi ý lời bài hát từ Beat!" : "trích xuất đặc điểm âm nhạc!"));
 
                         // Scroll result into view
                         htsResultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -208,6 +249,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             };
             reader.readAsDataURL(file);
+        });
+    }
+
+    if (btnSuggestLyricsHts) {
+        btnSuggestLyricsHts.addEventListener('click', () => {
+            const apiKey = apiKeyInput.value.trim();
+            if (!lastAudioBase64 || !apiKey) {
+                updateLog("Lỗi: Cần file âm thanh và API Key.");
+                return;
+            }
+
+            updateLog("Studio: Đang sáng tác lời bài hát mới cho Beat...");
+            btnSuggestLyricsHts.disabled = true;
+            btnSuggestLyricsHts.innerText = "ĐANG VIẾT LỜI...";
+
+            chrome.runtime.sendMessage({
+                action: "ANALYZE_AUDIO",
+                audioBase64: lastAudioBase64,
+                apiKey: apiKey,
+                model: "gemini-2.5-flash",
+                params: {
+                    language: languageSelect.value,
+                    artist: artistInput.value.trim(),
+                    gender: genderSelect.value,
+                    region: regionSelect.value,
+                    musicFocus: musicFocusSelect ? musicFocusSelect.value : "balanced",
+                    customSystemPrompt: customSystemPromptInput ? customSystemPromptInput.value.trim() : "",
+                    customStructure: currentStructure,
+                    vocalTraits: Array.from(document.querySelectorAll('#vocal-traits .pro-chip.active')).map(c => c.dataset.val),
+                    vocalPresets: Array.from(document.querySelectorAll('#vocal-presets .pro-chip.active')).map(c => c.dataset.val),
+                    emotions: Array.from(document.querySelectorAll('#emotion-chips .pro-chip.active')).map(c => c.dataset.val)
+                }
+            }, (response) => {
+                btnSuggestLyricsHts.disabled = false;
+                btnSuggestLyricsHts.innerText = "VIẾT LỜI MỚI CHO BEAT";
+
+                if (response && response.success) {
+                    const data = response.data;
+                    // Update UI
+                    if (data.isSuggestedLyrics || (data.lyrics && data.lyrics.length > 0)) {
+                        htsLyricsText.innerHTML = `<span style="color: #ffcc00; font-weight: 800; display: block; margin-bottom: 4px;">[ NEW SUGGESTED LYRICS ]</span>` + data.lyrics;
+                        htsResultBox.dataset.lyrics = data.lyrics;
+                        updateLog("Success: Đã sáng tác lời mới thành công!");
+                    } else {
+                        updateLog("Thông báo: AI không thể tạo lời nhạc mới cho đoạn này.");
+                    }
+                } else {
+                    updateLog("Lỗi: " + (response.error || "Không thể sáng tác lời."));
+                }
+            });
         });
     }
 
@@ -232,14 +323,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 customVibeInput.value = style;
                 selectedVibe = style;
 
-                if (isInstrumental) {
+                // NEW LOGIC: If we have lyrics (either extracted or suggested for a beat), 
+                // we want to use them to create a vocal version.
+                if (lyrics && lyrics.trim().length > 0) {
+                    instrumentalMode.checked = false;
+                    conceptInput.value = lyrics;
+                    inputModeToggle.checked = true; // Switch to Lyrics mode
+                } else if (isInstrumental) {
                     instrumentalMode.checked = true;
                     conceptInput.value = "Instrumental music inspired by " + title;
                     inputModeToggle.checked = false;
                 } else {
                     instrumentalMode.checked = false;
                     conceptInput.value = lyrics;
-                    inputModeToggle.checked = true; // Switch to Lyrics mode
+                    inputModeToggle.checked = true;
                 }
 
                 // Trigger UI updates
@@ -380,12 +477,17 @@ document.addEventListener('DOMContentLoaded', () => {
             autoStyleBtn.disabled = true;
             autoStyleBtn.innerText = "ĐANG TẠO...";
 
+            // Determine if we are in Lyrics mode to send lyrics for Deep Analysis
+            const isLyricsMode = inputModeToggle.checked;
+            const lyrics = isLyricsMode ? concept : "";
+
             chrome.runtime.sendMessage({
                 action: "GENERATE_STYLES",
                 apiKey: apiKey,
                 model: modelSelect.value,
                 params: {
                     concept: concept,
+                    lyrics: lyrics, // Added for Deep Analysis
                     language: language,
                     artist: artist,
                     gender: gender,
@@ -501,6 +603,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle indirect changes (like from analyzed image)
     inputModeToggle.addEventListener('change', updateInputModeUI);
+
+    rhythmFlowSelect.addEventListener('change', () => {
+        if (rhythmFlowSelect.value !== 'default' && cleanLyricsMode.checked) {
+            cleanLyricsMode.checked = false;
+            updateLog("Studio: Đã tắt 'Clean Ly' để cho phép sử dụng dấu câu điều hướng nhịp điệu.");
+        }
+        saveState();
+    });
 
     // --- PREVIEW LOGIC ---
     if (previewLyricsBtn) {
@@ -809,12 +919,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- TAB SWITCHING ---
     tabs.forEach(tab => {
         tab.addEventListener('click', () => {
-            // Prevent switching to disabled tabs
-            if (tab.classList.contains('disabled')) {
-                updateLog("⚠️ Tính năng đang phát triển - Coming Soon!");
-                return;
-            }
-
             tabs.forEach(t => t.classList.remove('active'));
             tabContents.forEach(c => c.classList.remove('active'));
 
@@ -839,7 +943,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.local.get([
         'gemini_api_key', 'gemini_model', 'saved_concept', 'saved_artist', 'saved_vibe', 'saved_custom_vibe',
         'saved_gender', 'saved_region', 'prompt_history', 'saved_system_prompt', 'saved_structure', 'saved_music_focus',
-        'is_clean_lyrics'
+        'saved_rhythm_flow', 'saved_instrumentation', 'saved_engineering', 'saved_energy', 'is_clean_lyrics', 'is_custom_lyrics', 'is_instrumental'
     ], (res) => {
         if (res.gemini_api_key) apiKeyInput.value = res.gemini_api_key;
         if (res.gemini_model) modelSelect.value = res.gemini_model;
@@ -848,7 +952,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.saved_gender) genderSelect.value = res.saved_gender;
         if (res.saved_region) regionSelect.value = res.saved_region;
         if (res.is_clean_lyrics !== undefined && cleanLyricsMode) cleanLyricsMode.checked = res.is_clean_lyrics;
+        if (res.is_instrumental !== undefined && instrumentalMode) {
+            instrumentalMode.checked = res.is_instrumental;
+            // Trigger change to update UI
+            instrumentalMode.dispatchEvent(new Event('change'));
+        }
         if (res.saved_music_focus && musicFocusSelect) musicFocusSelect.value = res.saved_music_focus;
+        if (res.saved_rhythm_flow && rhythmFlowSelect) rhythmFlowSelect.value = res.saved_rhythm_flow;
         if (res.saved_language && languageSelect) {
             languageSelect.value = res.saved_language;
             // Initial check for region visibility
@@ -866,6 +976,24 @@ document.addEventListener('DOMContentLoaded', () => {
             renderStructure();
         }
 
+        const restoreChips = (containerId, savedVals) => {
+            if (!savedVals) return;
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.querySelectorAll('.pro-chip').forEach(chip => {
+                if (savedVals.includes(chip.dataset.val)) {
+                    chip.classList.add('active');
+                }
+            });
+        };
+
+        restoreChips('instrument-chips', res.saved_instrumentation);
+        restoreChips('engineering-chips', res.saved_engineering);
+        restoreChips('energy-chips', res.saved_energy);
+        restoreChips('vocal-traits', res.saved_vocal_traits);
+        restoreChips('vocal-presets', res.saved_vocal_presets);
+        restoreChips('emotion-chips', res.saved_emotions);
+
         if (res.saved_custom_vibe) {
             customVibeInput.value = res.saved_custom_vibe;
             selectedVibe = res.saved_custom_vibe;
@@ -873,6 +1001,11 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (res.saved_vibe) {
             selectedVibe = res.saved_vibe;
             restoreVibeChip(selectedVibe);
+        }
+
+        if (res.is_custom_lyrics !== undefined && inputModeToggle) {
+            inputModeToggle.checked = res.is_custom_lyrics;
+            updateInputModeUI();
         }
 
         renderHistory(res.prompt_history || []);
@@ -914,7 +1047,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Save Advanced Settings
             saved_system_prompt: customSystemPromptInput ? customSystemPromptInput.value.trim() : "",
             saved_structure: currentStructure,
-            saved_music_focus: musicFocusSelect ? musicFocusSelect.value : "balanced"
+            saved_music_focus: musicFocusSelect ? musicFocusSelect.value : "balanced",
+            saved_rhythm_flow: rhythmFlowSelect ? rhythmFlowSelect.value : "default",
+            saved_instrumentation: Array.from(document.querySelectorAll('#instrument-chips .pro-chip.active')).map(c => c.dataset.val),
+            saved_engineering: Array.from(document.querySelectorAll('#engineering-chips .pro-chip.active')).map(c => c.dataset.val),
+            saved_energy: Array.from(document.querySelectorAll('#energy-chips .pro-chip.active')).map(c => c.dataset.val),
+            is_custom_lyrics: inputModeToggle ? inputModeToggle.checked : false,
+            is_instrumental: instrumentalMode ? instrumentalMode.checked : false
         });
     };
 
@@ -938,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    [genderSelect, regionSelect, modelSelect, languageSelect, musicFocusSelect, cleanLyricsMode].forEach(el => {
+    [genderSelect, regionSelect, modelSelect, languageSelect, musicFocusSelect, rhythmFlowSelect, cleanLyricsMode].forEach(el => {
         if (el) el.addEventListener('change', saveState);
     });
 
@@ -1204,6 +1343,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 customSystemPrompt: customSystemPromptInput ? customSystemPromptInput.value.trim() : "",
                 customStructure: currentStructure,
                 musicFocus: musicFocusSelect ? musicFocusSelect.value : "balanced",
+                rhythmFlow: rhythmFlowSelect ? rhythmFlowSelect.value : "default",
+                instrumentation: Array.from(document.querySelectorAll('#instrument-chips .pro-chip.active')).map(c => c.dataset.val),
+                engineering: Array.from(document.querySelectorAll('#engineering-chips .pro-chip.active')).map(c => c.dataset.val),
+                energy: Array.from(document.querySelectorAll('#energy-chips .pro-chip.active')).map(c => c.dataset.val),
                 vocalTraits: Array.from(document.querySelectorAll('#vocal-traits .pro-chip.active')).map(c => c.dataset.val),
                 vocalPresets: Array.from(document.querySelectorAll('#vocal-presets .pro-chip.active')).map(c => c.dataset.val),
                 emotions: Array.from(document.querySelectorAll('#emotion-chips .pro-chip.active')).map(c => c.dataset.val)
@@ -1339,239 +1482,199 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMultiSelectChips('vocal-traits');
     setupMultiSelectChips('vocal-presets');
     setupMultiSelectChips('emotion-chips');
+    setupMultiSelectChips('instrument-chips');
+    setupMultiSelectChips('engineering-chips');
+    setupMultiSelectChips('energy-chips');
 
     // ============================================
-    // WORKS TAB LOGIC
+    // AI MUSIC ASSISTANTS LOGIC (LOBBY MODE)
     // ============================================
 
-    const worksContainer = document.getElementById('works-container');
-    const btnRefreshWorks = document.getElementById('btn-refresh-works');
-    const btnClearWorks = document.getElementById('btn-clear-works');
-    const totalWorksEl = document.getElementById('total-works');
-    const thisWeekWorksEl = document.getElementById('this-week-works');
-
-    // Load works when Works tab is clicked
-    tabs.forEach(tab => {
-        const originalClickHandler = tab.onclick;
-        tab.addEventListener('click', () => {
-            if (tab.dataset.tab === 'works') {
-                loadAndRenderWorks();
-            }
-        });
-    });
-
-    // Refresh button
-    if (btnRefreshWorks) {
-        btnRefreshWorks.addEventListener('click', () => {
-            loadAndRenderWorks();
-            updateLog("Đã làm mới danh sách tác phẩm.");
-        });
-    }
-
-    // Clear all works
-    if (btnClearWorks) {
-        btnClearWorks.addEventListener('click', () => {
-            if (confirm("Bạn có chắc chắn muốn xóa toàn bộ tác phẩm không? Hành động này không thể hoàn tác!")) {
-                chrome.runtime.sendMessage({ action: "CLEAR_WORKS" }, (response) => {
-                    if (response && response.success) {
-                        loadAndRenderWorks();
-                        updateLog("Đã xóa tất cả tác phẩm!");
-                    } else {
-                        updateLog("Lỗi: Không thể xóa tác phẩm.");
-                    }
-                });
-            }
+    function loadAssistants() {
+        chrome.storage.local.get(['music_assistants'], (res) => {
+            currentAssistants = res.music_assistants || [
+                {
+                    id: 'agent-v-pop',
+                    name: 'V-Pop Producer',
+                    prompt: 'Bạn là một Music Producer chuyên nghiệp tại một studio lớn, am hiểu thị trường V-Pop Viral. Hãy giao tiếp như một cộng sự (co-producer). Đừng liệt kê dữ liệu một cách máy móc. Hãy đưa ra những nhận xét sắc sảo về bản phối, giai điệu hoặc ý tưởng hiện tại. Nếu thấy gì đó chưa ổn, hãy thẳng thắn góp ý và đưa ra phương án cải thiện cụ thể theo ngôn ngữ chuyên môn (VD: thay đổi preset synth, nén vocal, hay điều chỉnh tempo). Luôn chào hỏi thân thiện và gợi mở hội thoại.',
+                    role: 'Hòa âm phối khí',
+                    avatar: '🎵',
+                    model: 'gemini-2.0-flash',
+                    messages: []
+                },
+                {
+                    id: 'agent-lyricist',
+                    name: 'Lyric Architect',
+                    prompt: 'Bạn là một nhà thơ và nhạc sĩ viết lời (lyricist) có khả năng tạo ra những câu chữ "chạm" đến trái tim. Hãy giúp người dùng trau chuốt lời ca, xây dựng cốt truyện hoặc tìm kiếm vần điệu mới lạ. Giao tiếp tự nhiên, giàu cảm xúc nhưng vẫn chuyên nghiệp. Đừng chỉ trả lời vắn tắt, hãy gợi ý cách phát triển tứ thơ hoặc thay đổi cấu trúc điệp khúc để tạo cao trào.',
+                    role: 'Viết lời & Ý tưởng',
+                    avatar: '✍️',
+                    model: 'gemini-2.0-pro-exp-02-05',
+                    messages: []
+                }
+            ];
+            renderAssistantList();
         });
     }
 
-    function loadAndRenderWorks() {
-        chrome.storage.local.get(['created_works'], (res) => {
-            const works = res.created_works || [];
-            renderWorks(works);
-            updateWorksStats(works);
-        });
-    }
-
-    function renderWorks(works) {
-        if (!worksContainer) return;
-
-        worksContainer.innerHTML = '';
-
-        if (!works || works.length === 0) {
-            worksContainer.innerHTML = '<div class="empty-state">Chưa có tác phẩm nào. Hãy tạo bài hát đầu tiên!</div>';
-            return;
-        }
-
-        works.forEach((work, index) => {
-            const el = document.createElement('div');
-            el.className = 'work-item';
-
-            const date = new Date(work.timestamp);
-            const timeStr = date.toLocaleString('vi-VN', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-
-            // Determine title: use Suno title if available, otherwise use concept preview
-            const displayTitle = work.title || work.concept.substring(0, 60) + (work.concept.length > 60 ? '...' : '');
-
-            el.innerHTML = `
-                <div class="work-header">
-                    <div style="flex: 1;">
-                        <div class="work-title">${escapeHtml(displayTitle)}</div>
-                        <div class="work-timestamp">📅 ${timeStr}</div>
-                    </div>
-                </div>
-                
-                <div class="work-meta">
-                    ${work.vibe ? `<span class="work-tag">🎵 ${escapeHtml(work.vibe)}</span>` : ''}
-                    ${work.gender && work.gender !== 'Random' ? `<span class="work-tag">🎤 ${escapeHtml(work.gender)}</span>` : ''}
-                    ${work.artist ? `<span class="work-tag">🎨 ${escapeHtml(work.artist)}</span>` : ''}
-                    ${work.sunoId ? `<span class="work-tag">✅ Suno</span>` : ''}
-                </div>
-                
-                <div class="work-concept">${renderMarkdown(work.concept)}</div>
-                
-                <div class="work-actions">
-                    <button class="work-action-btn view-btn" data-index="${index}">👁️ Chi tiết</button>
-                    ${work.sunoUrl ? `<button class="work-action-btn open-btn" data-url="${escapeHtml(work.sunoUrl)}">🔗 Mở Suno</button>` : ''}
-                    <button class="work-action-btn reuse-btn" data-index="${index}">♻️ Tái sử dụng</button>
-                    <button class="work-action-btn danger delete-btn" data-work-id="${work.id}">🗑️ Xóa</button>
-                </div>
+    function renderAssistantList() {
+        if (!assistantsGrid) return;
+        assistantsGrid.innerHTML = '';
+        currentAssistants.forEach(assistant => {
+            const card = document.createElement('div');
+            card.className = `assistant-card ${assistant.id === activeAssistantId ? 'active' : ''}`;
+            card.innerHTML = `
+                <button class="card-settings-btn" title="Chỉnh sửa">⚙️</button>
+                <span class="card-avatar">${assistant.avatar || '🤖'}</span>
+                <span class="card-name">${assistant.name}</span>
+                <span class="card-role">${assistant.role || 'Trợ lý'}</span>
+                <div class="card-status"><i></i> Online</div>
             `;
 
-            // View details
-            el.querySelector('.view-btn').addEventListener('click', (e) => {
+            // Setup Edit button inside card
+            card.querySelector('.card-settings-btn').onclick = (e) => {
                 e.stopPropagation();
-                showWorkDetails(work);
-            });
+                openAssistantEditor(assistant.id);
+            };
 
-            // Open in Suno
-            const openBtn = el.querySelector('.open-btn');
-            if (openBtn) {
-                openBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const url = e.target.dataset.url;
-                    if (url) {
-                        chrome.tabs.create({ url: url });
-                        updateLog("Đã mở bài hát trên Suno!");
-                    }
-                });
+            // Setup card click to Open Chat on Suno
+            card.onclick = () => activateAssistantOnSuno(assistant);
+
+            assistantsGrid.appendChild(card);
+        });
+    }
+
+    async function activateAssistantOnSuno(assistant) {
+        activeAssistantId = assistant.id;
+        renderAssistantList();
+
+        // 1. Get current music context
+        const musicContext = getMusicContext();
+
+        // 2. Notify Suno Page to open chat
+        chrome.tabs.query({ url: "*://suno.com/*" }, (tabs) => {
+            if (tabs.length === 0) {
+                updateLog("Vui lòng mở trang suno.com để trò chuyện với trợ lý.");
+                return;
             }
 
-            // Reuse work
-            el.querySelector('.reuse-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                reuseWork(work);
+            const activeTab = tabs[0];
+            chrome.tabs.sendMessage(activeTab.id, {
+                action: "OPEN_ASSISTANT_CHAT",
+                assistant: assistant,
+                musicContext: musicContext
+            }, (res) => {
+                if (chrome.runtime.lastError) {
+                    updateLog("Không thể kết nối với trang Suno. Thử tải lại trang.");
+                } else {
+                    updateLog(`Đã kích hoạt ${assistant.name} trên trang Suno!`);
+                    // Optionally close popup after activation to let user focus on Suno
+                    // window.close(); 
+                }
             });
-
-            // Delete work
-            el.querySelector('.delete-btn').addEventListener('click', (e) => {
-                e.stopPropagation();
-                deleteWork(work.id);
-            });
-
-            worksContainer.appendChild(el);
         });
     }
 
-    function updateWorksStats(works) {
-        if (totalWorksEl) totalWorksEl.innerText = works.length;
+    function getMusicContext() {
+        const concept = conceptInput.value.trim();
+        const artist = artistInput.value.trim();
+        const vibe = selectedVibe;
+        const instrumentation = Array.from(document.querySelectorAll('#instrument-chips .pro-chip.active')).map(c => c.dataset.val);
+        const engineering = Array.from(document.querySelectorAll('#engineering-chips .pro-chip.active')).map(c => c.dataset.val);
+        const emotions = Array.from(document.querySelectorAll('#emotion-chips .pro-chip.active')).map(c => c.dataset.val);
 
-        // Count works from this week
-        const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-        const thisWeek = works.filter(w => w.timestamp > oneWeekAgo).length;
-        if (thisWeekWorksEl) thisWeekWorksEl.innerText = thisWeek;
+        return `
+[CONTEXT DỮ LIỆU ÂM NHẠC HIỆN TẠI]:
+- Ý tưởng/Lời: ${concept.substring(0, 500)}
+- Nghệ sĩ truyền cảm hứng: ${artist || 'N/A'}
+- Phong cách chủ đạo: ${vibe}
+- Nhạc cụ đã chọn: ${instrumentation.join(', ') || 'Auto'}
+- Kỹ thuật Mix: ${engineering.join(', ') || 'Standard'}
+- Cảm xúc: ${emotions.join(', ') || 'Balanced'}
+- Chế độ: ${inputModeToggle.checked ? 'Lyrics Mode' : 'Concept Mode'}
+        `.trim();
     }
 
-    function showWorkDetails(work) {
-        currentWorkForModal = work;
-
-        // Populate modal
-        workModalConcept.innerHTML = renderMarkdown(work.concept || "Không có nội dung.");
-        workModalLyrics.innerHTML = work.lyrics ? renderMarkdown(work.lyrics) : `<div class="empty-state" style="padding: 10px;">Chưa có lời bài hát chi tiết.</div>`;
-
-        // Metadata chips
-        workModalMeta.innerHTML = `
-            <div class="meta-tag">🎵 ${work.vibe || 'N/A'}</div>
-            <div class="meta-tag">🎤 ${work.gender || 'N/A'}</div>
-            <div class="meta-tag">🌍 ${work.region || 'N/A'}</div>
-            ${work.artist ? `<div class="meta-tag">🎨 ${work.artist}</div>` : ''}
-            ${work.sunoId ? `<div class="meta-tag">🆔 ${work.sunoId}</div>` : ''}
-        `;
-
-        // Show modal
-        workModal.classList.add('active');
-        updateLog(`Đang xem: ${work.title || 'Tác phẩm'}`);
+    function saveAssistants() {
+        chrome.storage.local.set({ music_assistants: currentAssistants });
     }
 
-    // Modal Events
-    if (closeWorkModalBtn) {
-        closeWorkModalBtn.addEventListener('click', () => {
-            workModal.classList.remove('active');
-        });
+    // Modal Control
+    if (btnAddAssistantPro) {
+        btnAddAssistantPro.onclick = () => {
+            editingAssistantId = null;
+            editAssistantName.value = '';
+            editAssistantPrompt.value = '';
+            editAssistantKey.value = '';
+            editAssistantModel.value = 'gemini-2.0-flash';
+            btnDeleteAssistant.style.display = 'none';
+            assistantEditorModal.style.display = 'flex';
+        };
     }
 
-    if (workModalReuseBtn) {
-        workModalReuseBtn.addEventListener('click', () => {
-            if (currentWorkForModal) {
-                reuseWork(currentWorkForModal);
-                workModal.classList.remove('active');
-            }
-        });
+    function openAssistantEditor(id) {
+        const assistant = currentAssistants.find(a => a.id === id);
+        if (!assistant) return;
+        editingAssistantId = assistant.id;
+        editAssistantName.value = assistant.name;
+        editAssistantPrompt.value = assistant.prompt;
+        editAssistantKey.value = assistant.apiKey || '';
+        editAssistantModel.value = assistant.model || 'gemini-2.0-flash';
+        btnDeleteAssistant.style.display = 'block';
+        assistantEditorModal.style.display = 'flex';
     }
 
-    // Close modal on click outside
-    workModal.addEventListener('click', (e) => {
-        if (e.target === workModal) {
-            workModal.classList.remove('active');
-        }
-    });
-
-    function reuseWork(work) {
-        // Populate compose form with work data
-        conceptInput.value = work.concept;
-        artistInput.value = work.artist || '';
-        selectedVibe = work.vibe || 'V-Pop Viral';
-        customVibeInput.value = '';
-
-        if (work.gender) genderSelect.value = work.gender;
-        if (work.region) regionSelect.value = work.region;
-
-        // Restore vibe chip
-        restoreVibeChip(selectedVibe);
-
-        saveState();
-
-        // Switch to compose tab
-        tabs.forEach(t => t.classList.remove('active'));
-        tabContents.forEach(c => c.classList.remove('active'));
-        const composeTabBtn = document.querySelector('[data-tab="compose"]');
-        if (composeTabBtn) composeTabBtn.classList.add('active');
-        const composeTabContent = document.getElementById('tab-compose');
-        if (composeTabContent) composeTabContent.classList.add('active');
-
-        updateLog("Đã tái sử dụng tác phẩm! Hãy chỉnh sửa và tạo lại.");
+    if (closeAssistantEditor) {
+        closeAssistantEditor.onclick = () => assistantEditorModal.style.display = 'none';
     }
 
-    function deleteWork(workId) {
-        if (!confirm("Bạn có chắc chắn muốn xóa tác phẩm này?")) return;
+    if (btnSaveAssistant) {
+        btnSaveAssistant.onclick = () => {
+            const name = editAssistantName.value.trim();
+            const prompt = editAssistantPrompt.value.trim();
+            if (!name || !prompt) return;
 
-        chrome.runtime.sendMessage({
-            action: "DELETE_WORK",
-            workId: workId
-        }, (response) => {
-            if (response && response.success) {
-                loadAndRenderWorks();
-                updateLog("Đã xóa tác phẩm!");
+            if (editingAssistantId) {
+                // Update
+                const idx = currentAssistants.findIndex(a => a.id === editingAssistantId);
+                if (idx !== -1) {
+                    currentAssistants[idx].name = name;
+                    currentAssistants[idx].prompt = prompt;
+                    currentAssistants[idx].apiKey = editAssistantKey.value.trim();
+                    currentAssistants[idx].model = editAssistantModel.value;
+                }
             } else {
-                updateLog("Lỗi: Không thể xóa tác phẩm.");
+                // Create
+                const newAssistant = {
+                    id: 'agent-' + Date.now(),
+                    name: name,
+                    prompt: prompt,
+                    role: 'Custom Assistant',
+                    avatar: '🤖',
+                    model: editAssistantModel.value,
+                    apiKey: editAssistantKey.value.trim(),
+                    messages: []
+                };
+                currentAssistants.push(newAssistant);
             }
-        });
+
+            saveAssistants();
+            renderAssistantList();
+            assistantEditorModal.style.display = 'none';
+        };
     }
+
+    if (btnDeleteAssistant) {
+        btnDeleteAssistant.onclick = () => {
+            if (!editingAssistantId || !confirm("Bạn có chắc chắn muốn xóa trợ lý này?")) return;
+            currentAssistants = currentAssistants.filter(a => a.id !== editingAssistantId);
+            saveAssistants();
+            renderAssistantList();
+            assistantEditorModal.style.display = 'none';
+        };
+    }
+
+    // Initialize Assistant Tab
+    loadAssistants();
 
     // Helper function to escape HTML
     function escapeHtml(text) {

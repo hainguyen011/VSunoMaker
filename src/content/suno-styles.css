@@ -1,19 +1,19 @@
 /* Suno Studio - Notification Styles */
 .shm-notification {
-    position: fixed;
-    top: 24px;
-    right: 24px;
-    background: #1e1e1e;
-    border: 1px solid #333333;
-    padding: 14px 24px;
-    border-radius: 16px;
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    z-index: 9999999;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    animation: shmSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    position: fixed !important;
+    top: 24px !important;
+    right: 24px !important;
+    background: #1e1e1e !important;
+    border: 1px solid #333333 !important;
+    padding: 14px 24px !important;
+    border-radius: 16px !important;
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    z-index: 2147483647 !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+    animation: shmSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
 @keyframes shmSlideIn {
@@ -28,94 +28,135 @@
     }
 }
 
-/* Floating Highlight Frame (Suno Studio Style) */
+/* Floating Highlight Frame */
 .shm-highlight-frame {
-    position: absolute;
-    pointer-events: none;
-    border: 3px solid #fa5656;
-    /* Thicker border for better visibility */
-    border-radius: 12px;
-    z-index: 10000000;
-    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    position: absolute !important;
+    align-items: flex-start !important;
+    justify-content: flex-end !important;
+    pointer-events: none !important;
+    border: 3px solid #fa5656 !important;
+    border-radius: 12px !important;
+    z-index: 10000000 !important;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
     display: none;
-    align-items: flex-start;
-    justify-content: flex-end;
+    overflow: hidden !important;
+}
+
+.shm-highlight-frame.shm-loading {
+    animation: shmFramePulse 3s infinite ease-in-out !important;
+}
+
+.shm-highlight-frame.shm-loading::after {
+    content: '' !important;
+    position: absolute !important;
+    top: -100% !important;
+    left: -100% !important;
+    width: 300% !important;
+    height: 300% !important;
+    background: linear-gradient(45deg,
+            transparent 48%,
+            rgba(255, 255, 255, 0.1) 50%,
+            transparent 52%) !important;
+    animation: shmScan 4s infinite cubic-bezier(0.4, 0, 0.2, 1) !important;
+    pointer-events: none !important;
+}
+
+@keyframes shmFramePulse {
+    0% {
+        box-shadow: 0 0 8px rgba(250, 86, 86, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 15px rgba(250, 86, 86, 0.3);
+    }
+
+    100% {
+        box-shadow: 0 0 8px rgba(250, 86, 86, 0.1);
+    }
+}
+
+.shm-highlight-frame.style-target.shm-loading {
+    animation: shmStylePulse 3s infinite ease-in-out !important;
+}
+
+@keyframes shmStylePulse {
+    0% {
+        box-shadow: 0 0 8px rgba(0, 242, 255, 0.1);
+    }
+
+    50% {
+        box-shadow: 0 0 15px rgba(0, 242, 255, 0.3);
+    }
+
+    100% {
+        box-shadow: 0 0 8px rgba(0, 242, 255, 0.1);
+    }
+}
+
+@keyframes shmScan {
+    from {
+        transform: translate(-10%, -10%);
+    }
+
+    to {
+        transform: translate(20%, 20%);
+    }
+}
+
+.shm-highlight-frame * {
+    pointer-events: auto !important;
 }
 
 .shm-highlight-label {
-    background: #fa5656;
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 0 10px 0 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-    z-index: 10000001;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    background: #fa5656 !important;
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 4px 10px !important;
+    border-radius: 0 10px 0 10px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* Style Target (Cyan) */
-.shm-highlight-frame.style-target {
-    border-color: #00f2ff;
-}
-
-.shm-highlight-frame.style-target .shm-highlight-label {
-    background: #00f2ff;
-    color: #000000;
-}
-
-/* Target element markers (Logic only, no layout impact) */
-.shm-custom-target-lyrics,
-.shm-custom-target-style {
-    /* We don't use outline here to avoid "double highlight" looks.
-       The JavaScript overlay handles the visual feedback. */
-    outline: none !important;
-    padding: 15px;
-}
-
-/* Regenerate Button in Frame (Bottom Left) */
 .shm-regen-btn {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    background: #fa5656;
-    /* Use theme color for better visibility at bottom */
-    border: none;
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: auto;
-    padding: 0;
-    line-height: 1;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    z-index: 10000002;
+    position: absolute !important;
+    bottom: -3px !important;
+    left: -3px !important;
+    background: #fa5656 !important;
+    border: none !important;
+    color: white !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    width: 28px !important;
+    height: 28px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 0 12px 0 12px !important;
+    transition: all 0.2s ease !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+    z-index: 10000001 !important;
+    box-shadow: 2px -2px 10px rgba(0, 0, 0, 0.3) !important;
 }
 
-.style-target .shm-regen-btn {
-    background: #00f2ff;
-    color: #000000;
+.shm-highlight-frame.style-target .shm-regen-btn {
+    background: #00f2ff !important;
+    color: #000 !important;
 }
 
 .shm-regen-btn:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    background: #ffffff !important;
+    color: #fa5656 !important;
 }
 
-.shm-regen-btn.spinning {
-    animation: shmSpin 1s infinite linear;
-    pointer-events: none;
-    opacity: 0.8;
+.shm-highlight-frame.style-target .shm-regen-btn:hover {
+    color: #00f2ff !important;
 }
 
-@keyframes shmSpin {
+
+
+@keyframes shmRotate {
     from {
         transform: rotate(0deg);
     }
@@ -125,133 +166,229 @@
     }
 }
 
-.shm-highlight-label {
-    display: flex;
-    align-items: center;
-    pointer-events: none;
-    /* No longer need clicks here */
+/* Style Target (Cyan) */
+.shm-highlight-frame.style-target {
+    border-color: #00f2ff !important;
 }
 
-/* Floating Toggle Button (Right Side) */
+.shm-highlight-frame.style-target .shm-highlight-label {
+    background: #00f2ff !important;
+    color: #000 !important;
+}
+
+/* Floating Toggle Button */
 .shm-floating-toggle {
-    position: fixed;
-    top: 50%;
-    right: 0;
-    transform: translateY(calc(50% - 20px));
-    background: #1e1e1e;
-    border: 1px solid #333333;
-    border-right: none;
-    border-radius: 8px 0 0 8px;
-    width: 40px;
-    height: 40px;
-    z-index: 9999998;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    color: #fff;
-    font-size: 20px;
-    color: #fa5656;
-    font-weight: bold;
+    position: fixed !important;
+    top: 50% !important;
+    right: 0 !important;
+    transform: translateY(-50%) !important;
+    background: #1e1e1e !important;
+    border: 1px solid #333333 !important;
+    border-right: none !important;
+    border-radius: 8px 0 0 8px !important;
+    width: 40px !important;
+    height: 40px !important;
+    z-index: 9999998 !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #fa5656 !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3) !important;
 }
 
-
-/* Loading Animation for Targets */
-@keyframes shmPulseGlow {
-    0% {
-        box-shadow: 0 0 0 0 rgba(250, 86, 86, 0.7);
-        border-color: #fa5656;
-    }
-
-    70% {
-        box-shadow: 0 0 0 10px rgba(250, 86, 86, 0);
-        border-color: #ff9999;
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(250, 86, 86, 0);
-        border-color: #fa5656;
-    }
+/* --- INJECTED AI ASSISTANT CHAT WINDOW --- */
+.shm-chat-window {
+    position: fixed !important;
+    bottom: 24px !important;
+    right: 24px !important;
+    width: 320px !important;
+    height: 460px !important;
+    min-width: 300px !important;
+    min-height: 400px !important;
+    background: rgba(20, 20, 20, 0.9) !important;
+    backdrop-filter: blur(30px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    z-index: 2147483647 !important;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7) !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    color: white !important;
+    overflow: hidden !important;
 }
 
-.shm-loading {
-    animation: shmPulseGlow 1.5s infinite;
-    position: relative;
-    pointer-events: none;
-    /* Prevent typing while loading */
-    opacity: 0.8;
+.shm-chat-window.minimized {
+    height: 60px !important;
+    min-height: 60px !important;
 }
 
-.shm-loading::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-40px, -50%);
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top: 2px solid #ffffff;
-    border-radius: 50%;
-    animation: shmSpin 0.8s linear infinite;
-    z-index: 10000003;
-    pointer-events: none;
+.shm-chat-header {
+    padding: 12px 16px !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    cursor: grab !important;
+    flex-shrink: 0 !important;
 }
 
-.shm-loading::after {
-    content: "AI đang viết...";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fa5656;
-    color: white;
-    padding: 6px 16px 6px 36px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: bold;
-    white-space: nowrap;
-    z-index: 10000002;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+.shm-chat-header:active {
+    cursor: grabbing !important;
 }
 
-/* Style Target Loading Color */
-.style-target .shm-loading {
-    animation-name: shmPulseCyan;
+.shm-chat-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    pointer-events: none !important;
 }
 
-.style-target.shm-loading::after {
-    background: #00f2ff;
-    color: #000;
+.shm-chat-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    background: linear-gradient(135deg, #fa5656, #ff8e8e) !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.1rem !important;
 }
 
-.style-target.shm-loading::before {
-    border-color: rgba(0, 0, 0, 0.3);
-    border-top-color: #000;
+.shm-chat-title-group {
+    display: flex !important;
+    flex-direction: column !important;
 }
 
-
-@keyframes shmPulseCyan {
-    0% {
-        box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7);
-        border-color: #00f2ff;
-    }
-
-    70% {
-        box-shadow: 0 0 0 10px rgba(0, 242, 255, 0);
-        border-color: #aaffff;
-    }
-
-    100% {
-        box-shadow: 0 0 0 0 rgba(0, 242, 255, 0);
-        border-color: #00f2ff;
-    }
+.shm-chat-name {
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
 }
 
-.shm-floating-toggle img {
-    width: 24px;
-    height: 24px;
-    pointer-events: none;
+.shm-chat-status {
+    font-size: 0.6rem !important;
+    color: #4caf50 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.shm-chat-status::before {
+    content: '' !important;
+    width: 5px !important;
+    height: 5px !important;
+    background: #4caf50 !important;
+    border-radius: 50% !important;
+}
+
+.shm-chat-actions {
+    display: flex !important;
+    gap: 6px !important;
+}
+
+.shm-icon-btn {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: white !important;
+    border-radius: 6px !important;
+    width: 24px !important;
+    height: 24px !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.8rem !important;
+}
+
+.shm-chat-messages {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    padding: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    background: rgba(0, 0, 0, 0.1) !important;
+}
+
+.shm-msg {
+    max-width: 85% !important;
+    padding: 10px 14px !important;
+    border-radius: 14px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.4 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.shm-msg.user {
+    align-self: flex-end !important;
+    background: #fa5656 !important;
+    color: white !important;
+    border-bottom-right-radius: 2px !important;
+}
+
+.shm-msg.ai {
+    align-self: flex-start !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-bottom-left-radius: 2px !important;
+}
+
+.shm-chat-input-area {
+    padding: 12px 16px 16px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.shm-context-badge {
+    font-size: 0.65rem !important;
+    color: #fa5656 !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.shm-input-container {
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 4px 4px 4px 10px !important;
+}
+
+.shm-chat-input {
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    color: white !important;
+    font-size: 0.85rem !important;
+    outline: none !important;
+    resize: none !important;
+    padding: 6px 0 !important;
+    font-family: inherit !important;
+}
+
+.shm-send-btn {
+    width: 32px !important;
+    height: 32px !important;
+    background: #fa5656 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    cursor: pointer !important;
+}
+
+.shm-custom-target-lyrics {
+    padding: 20px !important;
+}
+
+.shm-custom-target-style {
+    padding: 20px !important;
 }

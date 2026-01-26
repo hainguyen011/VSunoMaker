@@ -124,15 +124,21 @@ export const musicPrompts = {
         1. Phân tích lời bài hát kết hợp với phong cách chủ đạo là: "${vibe}".${genderContext}${regionDetailedContext}${languageContext}
         2. Chọn ra "style" và "title" phù hợp nhất dựa trên các thông số trên.
         3. Giữ nguyên lời bài hát gốc trong trường "lyrics". Bạn có thể thêm các thẻ [Meta Tags] như [Verse], [Chorus] vào trước các đoạn nếu chưa có.
-        4. QUAN TRỌNG - Xử lý dấu ngoặc đơn ():
-           a) Nếu là mô tả nhạc cụ/cấu trúc (KHÔNG có "Instrumental only"), chuyển sang format []:
+        4. QUAN TRỌNG - Xử lý dấu ngoặc đơn () và mô tả âm thanh:
+           a) Nếu là mô tả âm thanh/SFX bằng tiếng Việt (VD: Tiếng gió lùa, tiếng trống chiêng), BẮT BUỘC dịch sang tiếng Anh và thêm tiền tố "Instrumental only -":
+              - (Tiếng gió lùa...) → (Instrumental only - sound of wind blowing)
+              - (Tiếng đàn tranh rải nhẹ) → (Instrumental only - gentle zither plucking)
+           b) Nếu là mô tả nhạc cụ/cấu trúc (KHÔNG có "Instrumental only"), chuyển sang format []:
               - (Tiếng đàn tranh...) → [Intro – Đàn tranh and guitar]
               - (Piano solo) → [Interlude – Piano solo]
-           b) Nếu đã có format đúng (Instrumental only - instruction), GIỮ NGUYÊN:
+           c) Nếu đã có format đúng (Instrumental only - instruction), GIỮ NGUYÊN:
               - (Instrumental only - soft, melancholic) → GIỮ NGUYÊN
-              - (Instrumental only - powerful vocals) → GIỮ NGUYÊN
-           c) Nếu thiếu tiền tố "Instrumental only", THÊM VÀO:
+           d) Nếu thiếu tiền tố "Instrumental only" trong chỉ dẫn tiếng Anh, THÊM VÀO:
               - (soft piano) → (Instrumental only - soft piano)
+        
+        5. QUY TẮC PHỐI HỢP [STRUCTURE] VÀ (DIRECTION):
+           - Nếu người dùng viết: "[Intro] (Ambient / FX)" kết hợp với mô tả bên dưới.
+           - Hãy gộp lại thành: [Intro - Ambient / FX] sau đó xuống dòng và ghi chỉ dẫn (Instrumental only - ...).
             `;
         } else {
             // Default: Creating from Concept
@@ -170,6 +176,7 @@ export const musicPrompts = {
           * (Instrumental only - powerful, soaring vocals)
           * (Instrumental only - gentle acoustic guitar strumming)
           * (Instrumental only - dramatic orchestral build-up)
+          * (Instrumental only - sound of wind blowing through cliffs, dry leaves rustling, distant melancholic war horns and powerful war drums)
         
         
         **3. VÍ DỤ ÁP DỤNG ĐÚNG:**
@@ -243,9 +250,24 @@ export const musicPrompts = {
     ${promptModeInstructions}
 
     ### YÊU CẦU VỀ STYLE (Hòa âm phối khí):
-    Phải bao gồm các thẻ tag nhạc lý chuyên sâu bằng tiếng Anh để Suno AI hiểu được linh hồn bài hát. CẤU TRÚC BẮT BUỘC (KHÔNG ĐƯỢC chứa tên nghệ sĩ):
+    Phải bao gồm các thẻ tag nhạc lý chuyên sâu bằng tiếng Anh để Suno AI hiểu được linh hồn bài hát. CẤU TRÚC BẮT BUỘC:
     - [Sub-genre], [BPM], [Key], [Main Instruments], [Vocal Character], [Vocal Gender], [Atmosphere], [Studio Effects].
-    - Ví dụ: Modern V-Pop, 100 BPM, C# Minor, Catchy Synth Pluck, Breathiness, Rap-singing, High-end Reverb. (Tuyệt đối không dùng tên nghệ sĩ trong ví dụ này).
+    
+    ### YÊU CẦU SONIC ARCHITECT (KIẾN TRÚC ÂM THANH):
+    - DÀN NHẠC (INSTRUMENTATION): ${params.instrumentation?.join(', ') || 'Auto-select instruments based on genre'}
+    - KỸ THUẬT MIX (ENGINEERING): ${params.engineering?.join(', ') || 'Professional Studio Mix'}
+    - BIỂU ĐỒ NĂNG LƯỢNG (ENERGY): ${params.energy?.join(', ') || 'Steady Energy Flow'}
+    - AI phải tập trung sử dụng các nhạc cụ và kỹ thuật mix trên để xây dựng "Style Tag" một cách chuyên nghiệp nhất.
+
+    ### ĐỒNG BỘ HÓA NHỊP ĐIỆU & CẢM XÚC (Premium Alignment):
+    - Đảm bảo "style" được chọn phải phản ánh đúng năng lượng của "lyrics".
+    - SỬ DỤNG HỆ THỐNG ĐIỀU HƯỚNG NHỊP ĐIỆU (RHYTHM PUNCTUATION) trong lời bài hát:
+        * "," : Ngắt hơi ngắn (Micro-pause).
+        * "..." : Ngân dài, tăng không gian (Sustain/Legato).
+        * "." : Kết câu dứt khoát (Termination).
+        * "!" : Nhấn mạnh cao trào (Accent).
+    - Căn chỉnh lời theo phong cách nhịp điệu yêu cầu: "${params.rhythmFlow || 'Mặc định'}".
+    - AI phải tự động điều chỉnh cách ngắt câu trong lyrics (phân bổ vào các thẻ [Verse], [Chorus]) để khớp với nhịp điệu dự kiến của style đã chọn.
 
     ### ĐỊNH DẠNG ĐẦU RA (JSON DUY NHẤT):
     {

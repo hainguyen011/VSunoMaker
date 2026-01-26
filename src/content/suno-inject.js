@@ -60,23 +60,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         stopInspector();
         sendResponse({ success: true });
     } else if (request.action === "CLEAR_TARGET") {
-        stopInspector(); // Ensure inspector stops
+        stopInspector();
         const type = request.targetType;
         document.querySelectorAll(`.shm-custom-target-${type}`).forEach(el => {
             el.classList.remove(`shm-custom-target-${type}`);
         });
         chrome.storage.local.remove(`custom_selector_${type}`);
         syncHighlights();
-
-        const notification = document.createElement('div');
-        notification.className = 'shm-notification';
-        notification.innerText = `[VSunoMaker] Đã hủy bỏ vùng: ${type.toUpperCase()}`;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 2000);
-
         sendResponse({ success: true });
     } else if (request.action === "AUTO_FILL") {
-        // Stop loading first
         toggleLoadingState(false);
         fillSunoForm(request.data).then(success => {
             sendResponse({ success: success });
@@ -88,8 +80,269 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === "HIDE_LOADING") {
         toggleLoadingState(false);
         sendResponse({ success: true });
+    } else if (request.action === "OPEN_ASSISTANT_CHAT") {
+        if (!window.shmAssistantChat) {
+            window.shmAssistantChat = new AssistantChatWindow();
+        }
+        window.shmAssistantChat.open(request.assistant, request.musicContext);
+        sendResponse({ success: true });
     }
 });
+
+// --- ASSISTANT CHAT WINDOW CLASS ---
+class AssistantChatWindow {
+    constructor() {
+        this.container = null;
+        this.shadow = null;
+        this.messages = [];
+        this.activeAssistant = null;
+        this.musicContext = "";
+        this.isDragging = false;
+        this.dragOffset = { x: 0, y: 0 };
+        this.init();
+    }
+
+    async init() {
+        if (document.getElementById('shm-assistant-root')) return;
+
+        // Container Host: Minimal size, absolute positioning handled by dragging
+        this.container = document.createElement('div');
+        this.container.id = 'shm-assistant-root';
+        this.container.style.cssText = `
+            position: fixed !important;
+            bottom: 24px !important;
+            right: 24px !important;
+            width: 340px !important;
+            height: 500px !important;
+            z-index: 2147483647 !important;
+            display: none;
+            overflow: visible !important;
+        `;
+
+        // Shadow Root
+        this.shadow = this.container.attachShadow({ mode: 'open' });
+
+        // Link CSS
+        const cssUrl = chrome.runtime.getURL('src/content/suno-styles.css');
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = cssUrl;
+
+        // Wait for CSS to load before allowing display (optional but safer)
+        link.onload = () => console.log("[VSunoMaker] Shadow CSS Loaded.");
+        this.shadow.appendChild(link);
+
+        const chatUI = document.createElement('div');
+        chatUI.className = 'shm-chat-window';
+        chatUI.id = 'shm-window';
+        // IMPORTANT: Inside Shadow, we remove fixed position from the window itself
+        // so it follows the container host's position exactly.
+        chatUI.style.cssText = `
+            position: relative !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: auto !important;
+            bottom: auto !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+        `;
+
+        chatUI.innerHTML = `
+            <div class="shm-chat-header" id="shm-chat-handler">
+                <div class="shm-chat-info">
+                    <div class="shm-chat-avatar" id="shm-avatar">🤖</div>
+                    <div class="shm-chat-title-group">
+                        <div class="shm-chat-name" id="shm-name">AI Assistant</div>
+                        <div class="shm-chat-status">Online</div>
+                    </div>
+                </div>
+                <div class="shm-chat-actions">
+                    <button class="shm-icon-btn" id="shm-minimize" title="Thu nhỏ">_</button>
+                    <button class="shm-icon-btn" id="shm-close" title="Đóng">×</button>
+                </div>
+            </div>
+            
+            <div class="shm-chat-messages" id="shm-msgs"></div>
+
+            <div class="shm-chat-input-area">
+                <div class="shm-context-badge">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 0 0 0-9-9m9 9H3m9 9a9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"></path></svg>
+                    Context Synced
+                </div>
+                <div class="shm-input-container">
+                    <textarea class="shm-chat-input" id="shm-input" placeholder="Hỏi trợ lý về bản phối này..." rows="1"></textarea>
+                    <button class="shm-send-btn" id="shm-send">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </button>
+                </div>
+            </div>
+        `;
+
+        this.shadow.appendChild(chatUI);
+        document.body.appendChild(this.container);
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        const win = this.shadow.getElementById('shm-window');
+        const handler = this.shadow.getElementById('shm-chat-handler');
+        const closeBtn = this.shadow.getElementById('shm-close');
+        const minBtn = this.shadow.getElementById('shm-minimize');
+        const sendBtn = this.shadow.getElementById('shm-send');
+        const input = this.shadow.getElementById('shm-input');
+
+        // Dragging (Drag the entire host container)
+        handler.onmousedown = (e) => {
+            this.isDragging = true;
+            this.dragOffset.x = e.clientX - this.container.offsetLeft;
+            this.dragOffset.y = e.clientY - this.container.offsetTop;
+            this.container.style.transition = 'none';
+        };
+
+        document.onmousemove = (e) => {
+            if (!this.isDragging) return;
+            const x = e.clientX - this.dragOffset.x;
+            const y = e.clientY - this.dragOffset.y;
+
+            this.container.style.left = x + 'px';
+            this.container.style.top = y + 'px';
+            this.container.style.bottom = 'auto';
+            this.container.style.right = 'auto';
+        };
+
+        document.onmouseup = () => {
+            this.isDragging = false;
+            this.container.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.3s';
+        };
+
+        // Window Controls
+        closeBtn.onclick = () => this.container.style.display = 'none';
+        minBtn.onclick = () => win.classList.toggle('minimized');
+
+        // Chat Input
+        sendBtn.onclick = () => this.sendMessage();
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        };
+
+        // Auto-resize input
+        input.oninput = () => {
+            input.style.height = 'auto';
+            input.style.height = (input.scrollHeight) + 'px';
+        };
+    }
+
+    open(assistant, context) {
+        this.activeAssistant = assistant;
+        this.musicContext = context;
+        this.messages = assistant.messages || [];
+
+        this.shadow.getElementById('shm-name').innerText = assistant.name;
+        this.shadow.getElementById('shm-avatar').innerText = assistant.avatar || '🤖';
+
+        this.container.style.display = 'block';
+        this.renderMessages();
+
+        // Trigger Greeting if new conversation
+        if (this.messages.length === 0) {
+            this.triggerGreeting();
+        }
+    }
+
+    renderMessages() {
+        const msgsEl = this.shadow.getElementById('shm-msgs');
+        msgsEl.innerHTML = '';
+
+        if (this.messages.length === 0) {
+            msgsEl.innerHTML = `<div id="shm-empty-state" style="text-align: center; color: rgba(255,255,255,0.4); font-size: 0.75rem; margin-top: 20px; font-style: italic;">Đang khởi tạo hội thoại...</div>`;
+            return;
+        }
+
+        this.messages.forEach(msg => {
+            const el = document.createElement('div');
+            el.className = `shm-msg ${msg.role === 'user' ? 'user' : 'ai'}`;
+            // Convert newlines to <br> for simple formatting
+            el.innerHTML = msg.content.replace(/\n/g, '<br>');
+            msgsEl.appendChild(el);
+        });
+
+        msgsEl.scrollTop = msgsEl.scrollHeight;
+    }
+
+    async triggerGreeting() {
+        const msgsEl = this.shadow.getElementById('shm-msgs');
+        // Initial "AI is thinking" state for greeting
+        const emptyStateEl = msgsEl.querySelector('#shm-empty-state');
+        if (emptyStateEl) emptyStateEl.innerText = `${this.activeAssistant.name} đang xem qua bài nhạc của bạn...`;
+
+        chrome.runtime.sendMessage({
+            action: "CHAT_WITH_ASSISTANT",
+            apiKey: this.activeAssistant.apiKey,
+            model: this.activeAssistant.model || 'gemini-2.0-flash',
+            systemPrompt: this.activeAssistant.prompt,
+            musicContext: this.musicContext,
+            userMessage: "[HÀNH ĐỘNG HỆ THỐNG]: Hãy chào người dùng một cách tự nhiên. Tôi thấy bạn đã nắm bắt được bối cảnh sáng tác hiện tại của tôi (trong biến context). Hãy tóm tắt ngắn gọn những gì bạn thấy và đưa ra một lời khen hoặc gợi ý cải thiện sơ bộ để chúng ta bắt đầu thảo luận nhé.",
+            history: []
+        }, (res) => {
+            if (res && res.success) {
+                const aiMsg = { role: 'ai', content: res.data };
+                this.messages.push(aiMsg);
+                this.renderMessages();
+                this.syncToStorage();
+            } else {
+                if (emptyStateEl) emptyStateEl.innerText = "Không thể bắt đầu hội thoại. Hãy kiểm tra API Key.";
+            }
+        });
+    }
+
+    async sendMessage() {
+        const input = this.shadow.getElementById('shm-input');
+        const text = input.value.trim();
+        if (!text || !this.activeAssistant) return;
+
+        // Add user message
+        const userMsg = { role: 'user', content: text };
+        this.messages.push(userMsg);
+        this.renderMessages();
+
+        input.value = '';
+        input.style.height = 'auto';
+
+        chrome.runtime.sendMessage({
+            action: "CHAT_WITH_ASSISTANT",
+            apiKey: this.activeAssistant.apiKey,
+            model: this.activeAssistant.model || 'gemini-2.0-flash',
+            systemPrompt: this.activeAssistant.prompt,
+            musicContext: this.musicContext,
+            userMessage: text,
+            history: this.messages.slice(0, -1)
+        }, (res) => {
+            if (res && res.success) {
+                const aiMsg = { role: 'ai', content: res.data };
+                this.messages.push(aiMsg);
+                this.renderMessages();
+
+                // Sync back to storage
+                this.syncToStorage();
+            }
+        });
+    }
+
+    syncToStorage() {
+        chrome.storage.local.get(['music_assistants'], (res) => {
+            const assistants = res.music_assistants || [];
+            const idx = assistants.findIndex(a => a.id === this.activeAssistant.id);
+            if (idx !== -1) {
+                assistants[idx].messages = this.messages;
+                chrome.storage.local.set({ music_assistants: assistants });
+            }
+        });
+    }
+}
 
 function toggleLoadingState(isLoading) {
     const targets = [
@@ -98,19 +351,27 @@ function toggleLoadingState(isLoading) {
     ];
 
     targets.forEach(el => {
-        if (el && el.parentElement) {
-            // Add loading class to highlight frame if possible, or the element itself?
-            // The element itself is easier for now.
-            if (isLoading) {
-                el.classList.add('shm-loading');
-            } else {
-                el.classList.remove('shm-loading');
-            }
+        if (el) {
+            if (isLoading) el.classList.add('shm-loading');
+            else el.classList.remove('shm-loading');
         }
     });
 
-    // Also toggle the highlight frames loading state?
-    // Let's rely on CSS .shm-loading on the target element for now.
+    // Apply to highlight frames too for visual impact
+    for (const type in highlightOverlays) {
+        const frame = highlightOverlays[type];
+        if (frame) {
+            if (isLoading) frame.classList.add('shm-loading');
+            else frame.classList.remove('shm-loading');
+
+            // Also spin the button inside if it exists
+            const btn = frame.querySelector('.shm-regen-btn');
+            if (btn) {
+                if (isLoading) btn.classList.add('spinning');
+                else btn.classList.remove('spinning');
+            }
+        }
+    }
 }
 
 // Sync Highlighting (Always On Top)
@@ -147,9 +408,8 @@ function syncHighlights() {
             }
 
             const rect = el.getBoundingClientRect();
-            const tagName = el.tagName.toLowerCase();
             const labelText = overlay.querySelector('.label-text');
-            labelText.innerText = `${type.toUpperCase()} <${tagName}>`;
+            labelText.innerText = `${type.toUpperCase()}`;
 
             // Coordinate tracking (Always on top)
             const padding = 4;
@@ -179,7 +439,13 @@ async function handleRegenerate(targetType) {
     btn.classList.add('spinning');
     console.log(`[VSunoMaker] Regenerating ${targetType}...`);
 
-    chrome.storage.local.get(['gemini_api_key', 'saved_concept', 'saved_artist', 'saved_vibe', 'saved_gender', 'saved_region'], (res) => {
+    chrome.storage.local.get([
+        'gemini_api_key', 'gemini_model', 'saved_concept', 'saved_artist', 'saved_vibe', 'saved_custom_vibe',
+        'saved_gender', 'saved_region', 'saved_language', 'is_clean_lyrics', 'is_custom_lyrics',
+        'saved_system_prompt', 'saved_structure', 'saved_music_focus', 'saved_rhythm_flow',
+        'saved_instrumentation', 'saved_engineering', 'saved_energy', 'saved_vocal_traits',
+        'saved_vocal_presets', 'saved_emotions', 'is_instrumental'
+    ], (res) => {
         if (!res.gemini_api_key || !res.saved_concept) {
             alert("Vui lòng thiết lập API Key và Concept trong Popup trước khi tái tạo.");
             btn.classList.remove('spinning');
@@ -193,7 +459,22 @@ async function handleRegenerate(targetType) {
             artist: res.saved_artist || "",
             gender: res.saved_gender || "Random",
             region: res.saved_region || "Standard",
-            apiKey: res.gemini_api_key
+            language: res.saved_language || "Vietnamese",
+            apiKey: res.gemini_api_key,
+            model: res.gemini_model || "gemini-2.0-flash",
+            isInstrumental: res.is_instrumental || false,
+            isCustomLyrics: res.is_custom_lyrics || false,
+            isCleanLyrics: res.is_clean_lyrics || false,
+            customSystemPrompt: res.saved_system_prompt || "",
+            customStructure: res.saved_structure || [],
+            musicFocus: res.saved_music_focus || "balanced",
+            rhythmFlow: res.saved_rhythm_flow || "default",
+            instrumentation: res.saved_instrumentation || [],
+            engineering: res.saved_engineering || [],
+            energy: res.saved_energy || [],
+            vocalTraits: res.saved_vocal_traits || [],
+            vocalPresets: res.saved_vocal_presets || [],
+            emotions: res.saved_emotions || []
         }, (aiResponse) => {
             btn.classList.remove('spinning');
 

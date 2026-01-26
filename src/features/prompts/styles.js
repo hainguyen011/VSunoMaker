@@ -70,5 +70,47 @@ export const stylePrompts = {
     
     Ví dụ: Modern V-Pop, 105 BPM, G Major, Clean Electric Guitar, Atmospheric Pads, Emotional Male Vocals, High-end Reverb.
         `;
+    },
+
+    /**
+     * Advanced Style Analysis based on Lyrics and Emotion
+     * This is the "Premium" version of style generation
+     */
+    analyzeDeepStyle: (params) => {
+        const { lyrics, concept, language, artist, gender, region } = params;
+        return `
+    Bạn là một "Âm nhạc Kiến trúc sư" (Music Architect) và Nhà sản xuất âm nhạc cao cấp.
+    Nhiệm vụ: Phân tích TOÀN DIỆN dữ liệu đầu vào để tạo ra một cấu hình Style chuẩn xác, đảm bảo NHẠC VÀ LỜI ăn khớp hoàn hảo về nhịp điệu (Rhythm), cảm xúc (Emotion) và cấu trúc (Structure).
+
+    DỮ LIỆU ĐẦU VÀO:
+    - Lời bài hát/Ý tưởng: 
+    """
+    ${lyrics || concept}
+    """
+    - Ngôn ngữ: ${language}
+    - Nghệ sĩ truyền cảm hứng (ADN): ${artist || 'Tự do'}
+    - Âm hưởng: ${region}
+
+    YÊU CẦU PHÂN TÍCH CHUYÊN SÂU:
+    1. PHÂN TÍCH NHỊP ĐIỆU (Rhythm Analysis):
+       - Xác định số âm tiết trung bình trên mỗi câu để chọn BPM phù hợp (VD: Câu dài -> BPM chậm/vừa; Câu ngắn, dồn dập -> BPM nhanh).
+       - Phát hiện các điểm ngắt nghỉ tự nhiên hoặc các dấu (..., -) nếu có để đề xuất phong cách luyến láy.
+    
+    2. PHỔ CẢM XÚC (Emotional Mapping):
+       - Phân loại cảm xúc: (Melancholic, Euphoric, Aggressive, Nostalgic, v.v.)
+       - Ánh xạ sang Musical Key phù hợp (VD: Buồn -> C# Minor, Vui -> G Major, Mạnh mẽ -> D Minor).
+
+    3. DNA CHIẾT XUẤT (Style Extraction):
+       - Tìm các Sub-genres phù hợp nhất (VD: "Lời thơ mộng" -> Dream Pop; "Lời gắt, xã hội" -> Grime/Rap).
+       - Trích xuất các nhạc cụ đặc trưng phục vụ lời nhạc (VD: "Đàn tranh", "808 Bass").
+
+    4. CHỈ DẪN SẢN XUẤT (Production Polish):
+       - Đề xuất các hiệu ứng Studio: Reverb, Delay, Autotune, Lo-fi filter, v.v.
+
+    ĐẦU RA (STYLE TAGS - CHỈ TIẾNG ANH):
+    - Cấu trúc: [Genre/Sub-genre], [BPM], [Key], [Instruments], [Vocal Style], [Atmosphere], [Production Effects].
+    - QUY TẮC: Chỉ trả về duy nhất chuỗi Tag, phân tách bằng dấu phẩy. KHÔNG chứa tên nghệ sĩ "${artist || ''}".
+    - Ví dụ: Ethereal V-Pop, 85 BPM, Eb Major, Lush Synths, Delicate Đàn Tranh, Breathiness, Shimmer Reverb, Lo-fi Aesthetics.
+        `;
     }
 };
