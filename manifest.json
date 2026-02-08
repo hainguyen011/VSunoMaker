@@ -48,5 +48,15 @@
                 "src/content/suno-styles.css"
             ]
         }
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "src/content/suno-styles.css"
+            ],
+            "matches": [
+                "https://suno.com/*"
+            ]
+        }
     ]
 }

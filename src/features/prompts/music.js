@@ -1,14 +1,13 @@
 /**
- * VSunoMaker - Prompt Templates
- * Centralized Prompt Engineering Logic
+ * Prompts Feature - Music Composition
  */
 
-export const Prompts = {
+export const musicPrompts = {
     /**
      * Generates the main composition prompt for Suno
      */
     composeMusic: (params) => {
-        const { concept, vibe, artist, gender, region, language, isInstrumental, isCustomLyrics, customSystemPrompt, customStructure, musicFocus } = params;
+        const { concept, vibe, artist, gender, region, language, isInstrumental, isCustomLyrics, isCleanLyrics, customSystemPrompt, customStructure, musicFocus } = params;
 
         let focusContext = "";
         if (musicFocus === 'lyrics') {
@@ -125,15 +124,21 @@ export const Prompts = {
         1. Phân tích lời bài hát kết hợp với phong cách chủ đạo là: "${vibe}".${genderContext}${regionDetailedContext}${languageContext}
         2. Chọn ra "style" và "title" phù hợp nhất dựa trên các thông số trên.
         3. Giữ nguyên lời bài hát gốc trong trường "lyrics". Bạn có thể thêm các thẻ [Meta Tags] như [Verse], [Chorus] vào trước các đoạn nếu chưa có.
-        4. QUAN TRỌNG - Xử lý dấu ngoặc đơn ():
-           a) Nếu là mô tả nhạc cụ/cấu trúc (KHÔNG có "Instrumental only"), chuyển sang format []:
+        4. QUAN TRỌNG - Xử lý dấu ngoặc đơn () và mô tả âm thanh:
+           a) Nếu là mô tả âm thanh/SFX bằng tiếng Việt (VD: Tiếng gió lùa, tiếng trống chiêng), BẮT BUỘC dịch sang tiếng Anh và thêm tiền tố "Instrumental only -":
+              - (Tiếng gió lùa...) → (Instrumental only - sound of wind blowing)
+              - (Tiếng đàn tranh rải nhẹ) → (Instrumental only - gentle zither plucking)
+           b) Nếu là mô tả nhạc cụ/cấu trúc (KHÔNG có "Instrumental only"), chuyển sang format []:
               - (Tiếng đàn tranh...) → [Intro – Đàn tranh and guitar]
               - (Piano solo) → [Interlude – Piano solo]
-           b) Nếu đã có format đúng (Instrumental only - instruction), GIỮ NGUYÊN:
+           c) Nếu đã có format đúng (Instrumental only - instruction), GIỮ NGUYÊN:
               - (Instrumental only - soft, melancholic) → GIỮ NGUYÊN
-              - (Instrumental only - powerful vocals) → GIỮ NGUYÊN
-           c) Nếu thiếu tiền tố "Instrumental only", THÊM VÀO:
+           d) Nếu thiếu tiền tố "Instrumental only" trong chỉ dẫn tiếng Anh, THÊM VÀO:
               - (soft piano) → (Instrumental only - soft piano)
+        
+        5. QUY TẮC PHỐI HỢP [STRUCTURE] VÀ (DIRECTION):
+           - Nếu người dùng viết: "[Intro] (Ambient / FX)" kết hợp với mô tả bên dưới.
+           - Hãy gộp lại thành: [Intro - Ambient / FX] sau đó xuống dòng và ghi chỉ dẫn (Instrumental only - ...).
             `;
         } else {
             // Default: Creating from Concept
@@ -171,6 +176,7 @@ export const Prompts = {
           * (Instrumental only - powerful, soaring vocals)
           * (Instrumental only - gentle acoustic guitar strumming)
           * (Instrumental only - dramatic orchestral build-up)
+          * (Instrumental only - sound of wind blowing through cliffs, dry leaves rustling, distant melancholic war horns and powerful war drums)
         
         
         **3. VÍ DỤ ÁP DỤNG ĐÚNG:**
@@ -215,6 +221,12 @@ export const Prompts = {
            - KHÔNG ĐƯỢC phá kết cấu: Phải đặt ở những vị trí ngắt nghỉ tự nhiên hoặc cao trào cảm xúc để không làm gãy mạch phrasing của bài hát.
            - Ưu tiên sự tinh tế: Sử dụng để tạo điểm nhấn đắt giá, tránh biến bài hát thành một chuỗi ngắt quãng rời rạc.
            - Dựa vào phong cách để thêm các dấu hiệu đặc biệt
+        ${isCleanLyrics ? `
+        **6. CHẾ ĐỘ LỜI NHẠC SẠCH (CLEAN LYRICS):**
+        - BẮT BUỘC: KHÔNG ĐƯỢC sử dụng các dấu ba chấm (...) và dấu gạch ngang (-) trong lời bài hát.
+        - Hãy giữ ca từ "Sạch" (Clean), chỉ bao gồm chữ cái và các dấu câu cơ bản (phẩy, chấm).
+        - Tuyệt đối không thêm các ký hiệu điều hướng nhịp điệu vào giữa câu hoặc cuối câu.
+        ` : ""}
         
         - Nếu có lời hát trong phần đó, chỉ cần ghi thẻ [Verse], [Chorus], etc. rồi xuống dòng và viết lời ngay.
             `;
@@ -238,9 +250,24 @@ export const Prompts = {
     ${promptModeInstructions}
 
     ### YÊU CẦU VỀ STYLE (Hòa âm phối khí):
-    Phải bao gồm các thẻ tag nhạc lý chuyên sâu bằng tiếng Anh để Suno AI hiểu được linh hồn bài hát. CẤU TRÚC BẮT BUỘC (KHÔNG ĐƯỢC chứa tên nghệ sĩ):
+    Phải bao gồm các thẻ tag nhạc lý chuyên sâu bằng tiếng Anh để Suno AI hiểu được linh hồn bài hát. CẤU TRÚC BẮT BUỘC:
     - [Sub-genre], [BPM], [Key], [Main Instruments], [Vocal Character], [Vocal Gender], [Atmosphere], [Studio Effects].
-    - Ví dụ: Modern V-Pop, 100 BPM, C# Minor, Catchy Synth Pluck, Breathiness, Rap-singing, High-end Reverb. (Tuyệt đối không dùng tên nghệ sĩ trong ví dụ này).
+    
+    ### YÊU CẦU SONIC ARCHITECT (KIẾN TRÚC ÂM THANH):
+    - DÀN NHẠC (INSTRUMENTATION): ${params.instrumentation?.join(', ') || 'Auto-select instruments based on genre'}
+    - KỸ THUẬT MIX (ENGINEERING): ${params.engineering?.join(', ') || 'Professional Studio Mix'}
+    - BIỂU ĐỒ NĂNG LƯỢNG (ENERGY): ${params.energy?.join(', ') || 'Steady Energy Flow'}
+    - AI phải tập trung sử dụng các nhạc cụ và kỹ thuật mix trên để xây dựng "Style Tag" một cách chuyên nghiệp nhất.
+
+    ### ĐỒNG BỘ HÓA NHỊP ĐIỆU & CẢM XÚC (Premium Alignment):
+    - Đảm bảo "style" được chọn phải phản ánh đúng năng lượng của "lyrics".
+    - SỬ DỤNG HỆ THỐNG ĐIỀU HƯỚNG NHỊP ĐIỆU (RHYTHM PUNCTUATION) trong lời bài hát:
+        * "," : Ngắt hơi ngắn (Micro-pause).
+        * "..." : Ngân dài, tăng không gian (Sustain/Legato).
+        * "." : Kết câu dứt khoát (Termination).
+        * "!" : Nhấn mạnh cao trào (Accent).
+    - Căn chỉnh lời theo phong cách nhịp điệu yêu cầu: "${params.rhythmFlow || 'Mặc định'}".
+    - AI phải tự động điều chỉnh cách ngắt câu trong lyrics (phân bổ vào các thẻ [Verse], [Chorus]) để khớp với nhịp điệu dự kiến của style đã chọn.
 
     ### ĐỊNH DẠNG ĐẦU RA (JSON DUY NHẤT):
     {
@@ -258,160 +285,6 @@ export const Prompts = {
     - Đảm bảo không có dấu phẩy thừa ở cuối object hoặc array
 
     Hãy sáng tạo một kiệt tác có khả năng gây nghiện (Viral) và chạm đến cảm xúc người nghe.
-        `;
-    },
-
-    /**
-     * Polish Lyrics Prompt
-     */
-    polishLyrics: (params) => {
-        const { lyrics, vibe, artist, language, region } = params;
-        return `
-    Bạn là một chuyên gia ngôn ngữ và nhạc sĩ tài ba (Lyrics Polisher).
-    Nhiệm vụ: Chỉnh sửa lời bài hát dựa trên TOÀN BỘ nội dung để đảm bảo tính kết nối, vần điệu (rhyme) và mạch cảm xúc (flow).
-
-    DỰ LIỆU NGỮ CẢNH:
-    - Phong cách âm nhạc (Style): "${vibe || 'Pop'}"
-    - Nghệ sĩ truyền cảm hứng: "${artist || 'Không có'}"
-    - Ngôn ngữ: "${language || 'Tiếng Việt'}"
-    - Âm hưởng vùng miền: "${region || 'Chuẩn'}"
-
-    YÊU CẦU PHÂN TÍCH TOÀN CẢNH:
-    1. Đọc toàn bộ lời bài hát để xác định "vần chủ đạo" (Global Rhyme Theme).
-    2. Phát hiện những câu bị gãy vần, lỗi nhịp hoặc không khớp với phong cách "${vibe}".
-    3. Đề xuất sửa đổi linh hoạt (có thể là một câu hoặc cả một đoạn) để đạt được sự tối ưu cao nhất.
-
-    YÊU CẦU ĐẦU RA (JSON ARRAY BẮT BUỘC):
-    Bạn phải trả về một mảng JSON các đối tượng:
-    [
-      {
-        "original": "Đoạn gốc (một câu hoặc cụm câu) bị lỗi/chưa hay",
-        "suggested": "Đoạn đã được bạn chuốt lại hoàn chỉnh",
-        "reason": "Giải thích tại sao sửa theo phong cách ${vibe}",
-        "improvementScore": 85
-      }
-    ]
-
-    ### QUAN TRỌNG - QUY TắC JSON:
-    - Trả về DUY NHẤT một mảng JSON hợp lệ, không có văn bản thừa.
-    - Tất cả string phải được đặt trong dấu ngoặc kép.
-    - Duy trì các ký tự đặc biệt (…, —) trong nội dung JSON mà không cần escape đặc biệt.
-    - Đảm bảo tính hợp lệ của cấu trúc mảng JSON.
-
-    Lời gốc của người dùng:
-    """
-    ${lyrics}
-    """
-    
-    Lưu ý:
-    - Nếu toàn bộ bài hát đã tốt, trả về mảng rỗng [].
-    - Chỉ trả về duy nhất mảng JSON. Không có văn bản thừa.
-        `;
-    },
-
-    /**
-     * Fuse Styles Prompt
-     */
-    fuseStyles: (styleA, styleB) => {
-        return `
-    Nhiệm vụ: Lai tạo (Fusion) hai phong cách âm nhạc sau đây thành một Style Tag hợp lý và độc đáo cho Suno AI.
-    Style 1: "${styleA}"
-    Style 2: "${styleB}"
-    
-    Yêu cầu:
-    - Tìm ra điểm chung về nhịp điệu (BPM), nhạc cụ, và không khí.
-    - Kết hợp chúng thành một chuỗi tag tiếng Anh.
-    - Ví dụ: Input "Quan họ" + "Trap" -> Output "Vietnamese Folk, Trap Beat, 140 BPM, Quan Ho Vocals, 808 Bass, Traditional Flute".
-    - Chỉ trả về chuỗi Style Tag duy nhất.
-        `;
-    },
-
-    /**
-     * Clone Vibe Prompt
-     */
-    cloneVibe: (source) => {
-        return `
-    Bạn là chuyên gia phân tích âm nhạc. Hãy "dịch ngược" đoạn mô tả hoặc lời bài hát dưới đây thành cấu hình âm nhạc (Style Prompt).
-    
-    Nguồn:
-    """
-    ${source}
-    """
-    
-    Hãy trả về JSON duy nhất:
-    {
-       "style": "Chuỗi style tag chi tiết (Genre, BPM, Instruments, Mood)",
-       "artist": "Tên nghệ sĩ có phong cách tương tự (nếu nhận diện được, hoặc để trống)"
-    }
-
-    ### QUAN TRỌNG - QUY TắC JSON:
-    - Chỉ trả về duy nhất object JSON, không có text bao quanh.
-    - Đảm bảo các string được quote đúng cách.
-    - Xử lý các ký tự đặc biệt như …, — một cách an toàn trong string.
-        `;
-    },
-
-    /**
-     * Generate Styles Prompt
-     */
-    generateStyles: (params) => {
-        const { concept, language, artist, gender, region } = params;
-        return `
-    Bạn là một chuyên gia âm nhạc và nhà sản xuất (Studio Producer).
-    Nhiệm vụ: Dựa trên các thông tin dưới đây, hãy tạo ra một chuỗi các thẻ Style (Style Tags) chuyên sâu để Suno AI có thể tạo ra bản nhạc hay nhất.
-
-    THÔNG TIN ĐẦU VÀO:
-    - Nội dung (Lời/Ý tưởng): "${concept}"
-    - Ngôn ngữ dự kiến: "${language}"
-    - Nghệ sĩ truyền cảm hứng: "${artist || 'Không có'}"
-    - Giới tính giọng hát: "${gender || 'Ngẫu nhiên'}"
-    - Âm hưởng vùng miền: "${region || 'Mặc định'}"
-
-    YÊU CẦU VỀ STYLE TAGS:
-    1. Phải bao gồm: [Sub-genre], [BPM], [Key], [Main Instruments], [Atmosphere], [Production Style].
-    2. Các thẻ tag phải bằng tiếng Anh.
-    3. Nếu nghệ sĩ được nhắc đến, hãy trích xuất đặc trưng âm nhạc của họ (VD: "Sơn Tùng M-TP" -> "Modern V-Pop, Melodic Rap, Synth-heavy").
-    4. QUY TẮC NGHIÊM NGẶT: Chỉ trả về duy nhất chuỗi thẻ tag, cách nhau bởi dấu phẩy. KHÔNG ĐƯỢC bao gồm tên nghệ sĩ "${artist || ''}" trong chuỗi kết quả.
-    5. Không giải thích gì thêm.
-    
-    Ví dụ: Modern V-Pop, 105 BPM, G Major, Clean Electric Guitar, Atmospheric Pads, Emotional Male Vocals, High-end Reverb.
-        `;
-    },
-
-    /**
-     * Regenerate Review Item Prompt
-     */
-    regenerateReviewItem: (params) => {
-        const { original, currentSuggested, vibe, artist, language, region } = params;
-        return `
-    Bạn là một chuyên gia ngôn ngữ và nhạc sĩ tài ba (Lyrics Polisher).
-    Nhiệm vụ: Hãy tạo ra một PHƯƠNG ÁN KHÁC (Alternative) cho đoạn lời bài hát sau.
-
-    NGỮ CẢNH:
-    - Phong cách âm nhạc: "${vibe}"
-    - Nghệ sĩ: "${artist}"
-    - Ngôn ngữ: "${language}"
-    - Vùng miền: "${region}"
-
-    DỮ LIỆU HIỆN TẠI:
-    - Đoạn gốc: "${original}"
-    - Đã đề xuất trước đó: "${currentSuggested}"
-
-    YÊU CẦU:
-    1. Tạo ra một đề xuất MỚI hoàn toàn, không lặp lại cái cũ nhưng vẫn giữ đúng tinh thần và vần điệu.
-    2. Nếu là ${vibe}, hãy tập trung vào các đặc trưng vần điệu của thể loại này.
-    3. Trả về duy nhất đối tượng JSON:
-    {
-      "original": "${original}",
-      "suggested": "Đề xuất mới của bạn",
-      "reason": "Tại sao phương án này cũng hay hoặc khác biệt thế nào",
-      "improvementScore": 90
-    }
-
-    ### QUAN TRỌNG - QUY TắC JSON:
-    - CHỈ trả về một JSON object duy nhất.
-    - Đảm bảo string kết quả không chứa các ký tự phá vỡ cấu trúc JSON.
-    - Giữ nguyên các ký tự điều hướng nhịp điệu (…, —) trong chuỗi string JSON.
         `;
     }
 };

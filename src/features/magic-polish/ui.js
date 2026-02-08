@@ -20,6 +20,7 @@ export class MagicPolishUI {
         this.statusLog = document.getElementById('status-log');
         this.vibeChips = document.querySelectorAll('.vibe-chip');
         this.customVibeInput = document.getElementById('custom-vibe-input');
+        this.cleanLyricsMode = document.getElementById('clean-lyrics-mode');
 
         // Review Modal Elements
         this.reviewModal = document.getElementById('polish-review-modal');
@@ -80,7 +81,8 @@ export class MagicPolishUI {
             vibe: this.getSelectedVibe(),
             artist: this.artistInput.value.trim(),
             language: this.languageSelect ? this.languageSelect.value : "Vietnamese",
-            region: this.regionSelect ? this.regionSelect.value : "Standard"
+            region: this.regionSelect ? this.regionSelect.value : "Standard",
+            isCleanLyrics: this.cleanLyricsMode ? this.cleanLyricsMode.checked : false
         };
 
         try {
@@ -163,7 +165,8 @@ export class MagicPolishUI {
                     vibe: this.getSelectedVibe(),
                     artist: this.artistInput.value.trim(),
                     language: this.languageSelect.value,
-                    region: this.regionSelect.value
+                    region: this.regionSelect.value,
+                    isCleanLyrics: this.cleanLyricsMode ? this.cleanLyricsMode.checked : false
                 };
 
                 const response = await this.logic.regenerateReviewItem(params, this.apiKeyInput.value.trim(), this.modelSelect.value);

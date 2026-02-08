@@ -23,9 +23,8 @@
             <button class="tab-btn active" data-tab="compose" title="Sáng tác">
                 <i data-lucide="music"></i>
             </button>
-            <button class="tab-btn disabled" data-tab="works" title="🚧 Đang phát triển - Coming Soon" disabled>
-                <i data-lucide="library"></i>
-                <span class="dev-badge">DEV</span>
+            <button class="tab-btn" data-tab="assistants" title="Trợ lý AI (Co-Producer)">
+                <i data-lucide="message-square"></i>
             </button>
             <button class="tab-btn" data-tab="studio" title="Studio">
                 <i data-lucide="audio-lines"></i>
@@ -52,10 +51,19 @@
                             <input type="checkbox" id="input-mode-toggle" style="display: none;">
                         </div>
 
-                        <div class="pro-toggle-wrapper">
-                            <span class="pro-toggle-label">INSTRUMENTAL</span>
+                        <div class="pro-toggle-wrapper" title="Chế độ nhạc không lời (Instrumental)">
+                            <span class="pro-toggle-label">Inst</span>
                             <label class="pro-switch">
                                 <input type="checkbox" id="instrumental-mode">
+                                <span class="pro-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="pro-toggle-wrapper"
+                            title="Bật để loại bỏ các ký hiệu nhịp điệu (... và -) giúp lời nhạc sạch hơn">
+                            <span class="pro-toggle-label">Clean Ly</span>
+                            <label class="pro-switch">
+                                <input type="checkbox" id="clean-lyrics-mode">
                                 <span class="pro-slider"></span>
                             </label>
                         </div>
@@ -128,10 +136,21 @@
                             <label>TRỌNG TÂM</label>
                             <select id="music-focus"
                                 style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
-                                <option value="balanced">Cân bằng (Default)</option>
-                                <option value="lyrics">Ưu tiên Lời (Lyrics)</option>
-                                <option value="music">Ưu tiên Nhạc (Music)</option>
-                                <option value="fusion">Phối hợp (Fusion)</option>
+                                <option value="balanced">Cân bằng</option>
+                                <option value="lyrics">Ưu tiên Lời</option>
+                                <option value="music">Ưu tiên Nhạc</option>
+                                <option value="fusion">Phối hợp</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label>NHỊP ĐIỆU (RHYTHM)</label>
+                            <select id="rhythm-flow"
+                                style="width: 100%; padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: white; font-size: 0.85rem; outline: none;">
+                                <option value="default">Mặc định</option>
+                                <option value="ballad">Chậm & Ngân (Ballad)</option>
+                                <option value="rap">Dồn dập (Rap/Rock)</option>
+                                <option value="pop">Ngắt nghỉ Tinh tế (Pop)</option>
+                                <option value="epic">Mạnh mẽ (Epic)</option>
                             </select>
                         </div>
                     </div>
@@ -147,14 +166,21 @@
                         <div class="vibe-chip" data-vibe="Rock Ballad">Rock</div>
                     </div>
 
-                    <div class="input-panel custom-vibe-panel">
+                    <div class="input-panel custom-vibe-panel premium-style-accent">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label style="margin-bottom: 0;">VIBE TÙY CHỈNH (CUSTOM)</label>
-                            <button id="auto-style-btn" class="mini-auto-btn"
-                                title="🤖 Tự động tạo Style dựa trên nội dung">Auto</button>
+                            <div class="premium-button-group">
+                                <button id="auto-style-btn" class="mini-auto-btn premium"
+                                    title="🤖 AI High-Analysis: Phân tích sâu nhịp điệu & cảm xúc để tạo Style">Auto
+                                    AI</button>
+                            </div>
                         </div>
                         <input type="text" id="custom-vibe-input" placeholder="Ví dụ: Bolero, Jazz, Funk...">
+                        <div class="premium-badge-info">
+                            <i data-lucide="sparkles" style="width: 10px; height: 10px;"></i>
+                            AI sẽ phân tích lời nhạc để đồng bộ nhịp điệu
+                        </div>
                     </div>
                 </div>
 
@@ -178,34 +204,60 @@
                 </div>
             </div>
 
-            <!-- TAB: WORKS -->
-            <div id="tab-works" class="tab-content">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
-                    <label style="margin: 0;">TÁC PHẨM CỦA BẠN</label>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="icon-btn" id="btn-refresh-works" style="font-size: 0.65rem; padding: 4px 10px;">↻
-                            LÀM MỚI</button>
-                        <button class="icon-btn clear-btn" id="btn-clear-works"
-                            style="font-size: 0.65rem; padding: 4px 10px;">XÓA TẤT CẢ</button>
+            <!-- TAB: ASSISTANTS (LAUNCHER MODE) -->
+            <div id="tab-assistants" class="tab-content">
+                <div class="assistants-lobby">
+                    <div class="lobby-header">
+                        <div class="lobby-title">TRỢ LÝ ÂM NHẠC</div>
+                        <p class="lobby-subtitle">Chọn một nhân cách AI để bắt đầu cộng tác trực tiếp trên trang Suno.
+                        </p>
                     </div>
+
+                    <div id="assistants-grid" class="assistants-grid">
+                        <!-- Assistant Cards will be injected here -->
+                    </div>
+
+                    <button id="btn-add-assistant-pro" class="add-assistant-card">
+                        <div class="plus-icon">+</div>
+                        <span>Thêm Trợ lý Mới</span>
+                    </button>
                 </div>
 
-                <!-- Stats Summary -->
-                <div class="works-stats">
-                    <div class="stat-card">
-                        <span class="stat-value" id="total-works">0</span>
-                        <span class="stat-label">Tổng số</span>
+                <!-- Modal: Assistant Editor (Keep this in popup) -->
+                <div id="assistant-editor-modal" class="modal-overlay" style="display: none;">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <div class="modal-title">CẤU HÌNH TRỢ LÝ</div>
+                            <button class="close-modal" id="close-assistant-editor">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-panel">
+                                <label>TÊN TRỢ LÝ</label>
+                                <input type="text" id="edit-assistant-name" placeholder="Ví dụ: Producer Ballad">
+                            </div>
+                            <div class="input-panel">
+                                <label>NHÂN CÁCH (SYSTEM PROMPT)</label>
+                                <textarea id="edit-assistant-prompt"
+                                    placeholder="Mô tả vai trò của trợ lý..."></textarea>
+                            </div>
+                            <div class="input-panel">
+                                <label>GEMINI API KEY (RIÊNG)</label>
+                                <input type="password" id="edit-assistant-key"
+                                    placeholder="Bỏ trống để dùng Key mặc định">
+                            </div>
+                            <div class="input-panel">
+                                <label>MODEL</label>
+                                <select id="edit-assistant-model">
+                                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Nhanh)</option>
+                                    <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro (Thông minh)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="btn-save-assistant" class="glow-button">LƯU CẤU HÌNH</button>
+                            <button id="btn-delete-assistant" class="ghost-btn danger">XÓA TRỢ LÝ</button>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <span class="stat-value" id="this-week-works">0</span>
-                        <span class="stat-label">Tuần này</span>
-                    </div>
-                </div>
-
-                <!-- Works List -->
-                <div class="works-list" id="works-container">
-                    <div class="empty-state">Chưa có tác phẩm nào. Hãy tạo bài hát đầu tiên!</div>
                 </div>
             </div>
 
@@ -504,6 +556,9 @@
                                     </div>
                                 </div>
                                 <button id="btn-apply-hts" class="action-btn">SÁNG TÁC DỰA TRÊN FILE NÀY</button>
+                                <button id="btn-suggest-lyrics-hts" class="action-btn"
+                                    style="margin-top: 8px; background: var(--accent); color: white ; border: none;">VIẾT
+                                    LỜI MỚI CHO BEAT</button>
                             </div>
                         </div>
                     </div>
@@ -601,6 +656,50 @@
                                 <div class="pro-chip" data-val="Chill & Relaxing">Bình yên</div>
                                 <div class="pro-chip" data-val="Dark & Aggressive">Giận dữ</div>
                                 <div class="pro-chip" data-val="Mysterious">Bí ẩn</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2.3. Sonic Architect -->
+                    <div class="studio-accordion">
+                        <div class="accordion-header">
+                            <label>🎹 SONIC ARCHITECT (KIẾN TRÚC)</label>
+                            <div class="accordion-icon">▼</div>
+                        </div>
+                        <div class="accordion-body">
+                            <p class="feature-intro">Thiết kế dàn nhạc và không gian âm thanh chuyên sâu.</p>
+
+                            <div class="pro-group">
+                                <span class="pro-label">INSTRUMENTATION (DÀN NHẠC)</span>
+                                <div class="pro-grid-3" id="instrument-chips">
+                                    <div class="pro-chip" data-val="Vintage Keys">Vintage Keys</div>
+                                    <div class="pro-chip" data-val="Cinematic Brass">Brass</div>
+                                    <div class="pro-chip" data-val="808 Bass Sub">808 Bass</div>
+                                    <div class="pro-chip" data-val="Moog Synth">Moog</div>
+                                    <div class="pro-chip" data-val="Real Strings Section">Strings</div>
+                                    <div class="pro-chip" data-val="Acoustic Percussion">Percussion</div>
+                                </div>
+                            </div>
+
+                            <div class="pro-group">
+                                <span class="pro-label">AUDIO ENGINEERING (MIX)</span>
+                                <div class="pro-grid" id="engineering-chips">
+                                    <div class="pro-chip" data-val="Wide Stereo Image">Wide Stereo</div>
+                                    <div class="pro-chip" data-val="Analog Tape Warmth">Analog Warmth</div>
+                                    <div class="pro-chip" data-val="Bitcrushed Lo-fi">Bitcrushed</div>
+                                    <div class="pro-chip" data-val="Sidechain Compression">Sidechain</div>
+                                    <div class="pro-chip" data-val="Large Cathedral Reverb">Ethereal</div>
+                                    <div class="pro-chip" data-val="Distorted Grit">Grit</div>
+                                </div>
+                            </div>
+
+                            <div class="pro-group">
+                                <span class="pro-label">ENERGY PROFILE (NĂNG LƯỢNG)</span>
+                                <div class="pro-grid-3" id="energy-chips">
+                                    <div class="pro-chip" data-val="Explosive Burst">Burst</div>
+                                    <div class="pro-chip" data-val="Crescendo Build-up">Crescendo</div>
+                                    <div class="pro-chip" data-val="Steady Continuous Energy">Steady</div>
+                                </div>
                             </div>
                         </div>
                     </div>

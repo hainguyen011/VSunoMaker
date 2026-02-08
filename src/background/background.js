@@ -3,7 +3,7 @@
  */
 
 import { callGemini, callGeminiVision, callGeminiAudio } from '../core/ai-service.js';
-import { Prompts } from '../core/prompts.js';
+import { Prompts } from '../features/prompts/index.js';
 
 // --- MESSAGE HANDLERS ---
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -65,6 +65,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
+    // AI Assistant Chat
+    if (request.action === "CHAT_WITH_ASSISTANT") {
+        const { apiKey, model, userMessage, systemPrompt, musicContext, history } = request;
+
+        // Structure the prompt to clearly separate background context from the immediate conversation
+        const combinedPrompt = `
+${systemPrompt}
+
+[DỮ LIỆU BẢN PHỐI HIỆN TẠI (CONTEXT)]:
+${musicContext}
+
+[CHỈ DẪN QUAN TRỌNG]: 
+- Hãy sử dụng dữ liệu trên như tri thức nền để tư vấn. 
+- Đừng lặp lại dữ liệu Context một cách máy móc trừ khi người dùng yêu cầu phân tích cụ thể.
+- Hãy ưu tiên sự tự nhiên, trôi chảy và chuyên môn trong hội thoại.
+
+[CÂU HỎI/YÊU CẦU CỦA NGƯỜI DÙNG]:
+${userMessage}
+        `.trim();
+
+        callGemini(combinedPrompt, apiKey, model, history)
+            .then(data => sendResponse({ success: true, data: data }))
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
+    }
+
     // 5. Analyze Image (Multimodal)
     if (request.action === "ANALYZE_IMAGE") {
         callGeminiVision(request.imageBase64, request.apiKey, request.model)
@@ -83,7 +109,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     // 5.5. Generate Styles (Pro)
     if (request.action === "GENERATE_STYLES") {
-        const prompt = Prompts.generateStyles(request.params);
+        const { lyrics, concept } = request.params;
+        let prompt;
+
+        // Use Deep Analysis if lyrics are provided for "Premium" result
+        if (lyrics && lyrics.trim().length > 20) {
+            prompt = Prompts.analyzeDeepStyle(request.params);
+        } else {
+            prompt = Prompts.generateStyles(request.params);
+        }
+
         callGemini(prompt, request.apiKey, request.model)
             .then(data => sendResponse({ success: true, data: data }))
             .catch(err => sendResponse({ success: false, error: err.message }));
@@ -92,14 +127,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     // 6. Analyze Audio (Multimodal)
     if (request.action === "ANALYZE_AUDIO") {
-        callGeminiAudio(request.audioBase64, request.apiKey, request.model)
+        callGeminiAudio(request.audioBase64, request.apiKey, request.model, request.params)
             .then(text => {
                 try {
                     const jsonMatch = text.match(/\{[\s\S]*?\}/);
-                    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { lyrics: "", style: text, title: "", vibe: "", isInstrumental: false };
+                    const result = jsonMatch ? JSON.parse(jsonMatch[0]) : { lyrics: "", style: text, title: "", vibe: "", isInstrumental: false, isSuggestedLyrics: false };
                     sendResponse({ success: true, data: result });
                 } catch (e) {
-                    sendResponse({ success: true, data: { lyrics: "", style: text, title: "", vibe: "", isInstrumental: false } });
+                    sendResponse({ success: true, data: { lyrics: "", style: text, title: "", vibe: "", isInstrumental: false, isSuggestedLyrics: false } });
                 }
             })
             .catch(err => sendResponse({ success: false, error: err.message }));
@@ -113,29 +148,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
-    // 7. Get all works
-    if (request.action === "GET_WORKS") {
-        chrome.storage.local.get(['created_works'], (res) => {
-            sendResponse({ success: true, data: res.created_works || [] });
-        });
-        return true;
-    }
-
-    // 8. Delete a work
-    if (request.action === "DELETE_WORK") {
-        deleteWork(request.workId)
-            .then(() => sendResponse({ success: true }))
-            .catch(err => sendResponse({ success: false, error: err.message }));
-        return true;
-    }
-
-    // 9. Clear all works
-    if (request.action === "CLEAR_WORKS") {
-        chrome.storage.local.set({ created_works: [], tracked_song_ids: [] }, () => {
-            sendResponse({ success: true });
-        });
-        return true;
-    }
 });
 
 // --- HELPER FUNCTIONS ---
