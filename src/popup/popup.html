@@ -90,7 +90,12 @@
                         <div id="lyrics-render-preview" class="lyrics-render-preview" style="display: none;"></div>
                     </div>
 
-                    <label>NGHỆ SĨ TRUYỀN CẢM HỨNG</label>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin-bottom: 0;">NGHỆ SĨ TRUYỀN CẢM HỨNG</label>
+                        <button class="mini-auto-btn" id="btn-review-artist" title="Review ADN Nghệ sĩ"
+                            style="font-size: 0.6rem; padding: 2px 8px;">Review ADN</button>
+                    </div>
                     <input type="text" id="artist-input" placeholder="Ví dụ: Sơn Tùng M-TP..."
                         style="color: white; margin-bottom: 20px; ">
 
@@ -775,6 +780,41 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal: Artist DNA Review -->
+    <div id="artist-dna-modal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 450px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i data-lucide="dna"></i>
+                    <span>TỔNG HỢP ADN ÂM NHẠC</span>
+                </div>
+                <button class="close-modal" id="close-artist-dna-modal">×</button>
+            </div>
+            <div class="modal-body" id="artist-dna-body">
+                <!-- Nội dung phân tích sẽ được inject vào đây -->
+                <div class="loading-dna" style="text-align: center; padding: 40px 0;">
+                    <div class="pulse-indicator" style="margin: 0 auto 15px;"></div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">Đang giải mã ADN âm nhạc và mô phỏng chất
+                        giọng...</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 16px; border-top: 1px solid var(--border);">
+                <div class="dna-action-row" style="display: flex; gap: 10px; width: 100%;">
+                    <button class="ghost-btn" id="btn-apply-dna-simple"
+                        style="flex: 1; font-size: 0.75rem; padding: 10px;">
+                        Apply Genres Only
+                    </button>
+                    <button class="glow-button premium" id="btn-apply-dna-full"
+                        style="flex: 1.5; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; background: linear-gradient(90deg, #ff4757, #ff6b81);">
+                        <i data-lucide="zap" style="width: 14px;"></i>
+                        Apply Full DNA & Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="popup.js"></script>
 </body>
 

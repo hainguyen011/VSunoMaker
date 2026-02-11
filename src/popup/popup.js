@@ -76,6 +76,433 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeAssistantId = null;
     let editingAssistantId = null;
 
+    // --- ARTIST DNA REVIEW ELEMENTS ---
+    const btnReviewArtist = document.getElementById('btn-review-artist');
+    // artistInput is already declared elsewhere
+    const artistDnaModal = document.getElementById('artist-dna-modal');
+    const closeArtistDnaModal = document.getElementById('close-artist-dna-modal');
+    const artistDnaBody = document.getElementById('artist-dna-body');
+    const btnApplyDnaSimple = document.getElementById('btn-apply-dna-simple');
+    const btnApplyDnaFull = document.getElementById('btn-apply-dna-full');
+
+    // 1. Open Review Modal
+    if (btnReviewArtist) {
+        btnReviewArtist.addEventListener('click', async () => {
+            const artistName = artistInput.value.trim();
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!artistName) {
+                updateLog("Vui lòng nhập tên nghệ sĩ trước!");
+                artistInput.focus();
+                return;
+            }
+            if (!apiKey) {
+                updateLog("Lỗi: Cần API Key để phân tích.");
+                return;
+            }
+
+            // Open Modal & Show Loading
+            artistDnaModal.classList.add('active');
+            artistDnaBody.innerHTML = `
+                <div class="loading-dna" style="text-align: center; padding: 40px 0;">
+                    <div class="pulse-indicator" style="margin: 0 auto 15px;"></div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">Đang giải mã ADN âm nhạc và mô phỏng chất giọng...</div>
+                </div>
+            `;
+            btnApplyDnaSimple.disabled = true;
+            btnApplyDnaFull.disabled = true;
+
+            // Call API
+            try {
+                chrome.runtime.sendMessage({
+                    action: "ANALYZE_ARTIST_DNA",
+                    artist: artistName,
+                    apiKey: apiKey,
+                    model: modelSelect.value
+                }, (response) => {
+                    if (response && response.success) {
+                        renderArtistDNA(response.data);
+                        btnApplyDnaSimple.disabled = false;
+                        btnApplyDnaFull.disabled = false;
+                    } else {
+                        artistDnaBody.innerHTML = `<div style="text-align:center; color: #ff5f5f; padding: 20px;">
+                            Lỗi: ${response.error || "Không thể phân tích nghệ sĩ này."}
+                        </div>`;
+                    }
+                });
+            } catch (err) {
+                artistDnaBody.innerHTML = `<div style="text-align:center; color: #ff5f5f; padding: 20px;">Lỗi kết nối.</div>`;
+            }
+        });
+    }
+
+    // 2. Render DNA Result
+    function renderArtistDNA(data) {
+        // Safe access helper
+        const safeJoin = (arr) => Array.isArray(arr) ? arr.join(' • ') : (arr || "");
+
+        // Check if multi-artist collaboration
+        if (data.is_collaboration && data.artists && data.artists.length > 0) {
+            renderMultiArtistDNA(data);
+        } else {
+            renderSingleArtistDNA(data);
+        }
+
+        // Render Icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Store data for Apply action
+        btnApplyDnaSimple.dataset.dna = JSON.stringify(data);
+        btnApplyDnaFull.dataset.dna = JSON.stringify(data);
+    }
+
+    // 2a. Render Single Artist DNA
+    function renderSingleArtistDNA(data) {
+        const safeJoin = (arr) => Array.isArray(arr) ? arr.join(' • ') : (arr || "");
+
+        // Extract data
+        const vocal = data.vocal || {};
+        const lyrics = data.lyrics || {};
+        const musicality = data.musicality || {};
+
+        const html = `
+            <div class="dna-grid">
+                ${renderArtistDNAContent(vocal, lyrics, musicality, data.overall_vibe)}
+            </div>
+        `;
+
+        artistDnaBody.innerHTML = html;
+    }
+
+    // 2b. Render Multi-Artist DNA
+    function renderMultiArtistDNA(data) {
+        let currentArtistIndex = 0;
+
+        // Build tabs HTML
+        const tabsHTML = `
+            <div class="dna-artist-tabs">
+                ${data.artists.map((artist, index) => `
+                    <div class="dna-artist-tab ${index === 0 ? 'active' : ''}" data-index="${index}">
+                        ${artist.name || `Nghệ sĩ ${index + 1}`}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Build artist content (initially show first artist)
+        const artistContentHTML = `<div id="dna-artist-content" class="dna-grid"></div>`;
+
+        // Build collaboration section
+        const collabHTML = data.collaboration ? `
+            <div class="dna-collaboration-section">
+                <div class="dna-collab-header">
+                    <i data-lucide="zap"></i>
+                    COLLABORATION INSIGHTS
+                </div>
+                
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="sparkles"></i> Fusion Style
+                    </div>
+                    <div class="dna-collab-content">
+                        ${data.collaboration.fusion_style || ""}
+                    </div>
+                </div>
+                
+                ${data.collaboration.complementary_traits && data.collaboration.complementary_traits.length > 0 ? `
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="git-compare"></i> Complementary Traits
+                    </div>
+                    <div class="dna-collab-traits">
+                        ${data.collaboration.complementary_traits.map(trait => `
+                            <div class="dna-collab-trait-item">${trait}</div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${data.collaboration.signature_tracks_vibe ? `
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="disc"></i> Signature Vibe
+                    </div>
+                    <div class="dna-collab-content">
+                        ${data.collaboration.signature_tracks_vibe}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${data.collaboration.recommended_roles ? `
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="target"></i> Recommended Roles
+                    </div>
+                    <div class="dna-role-list">
+                        ${Object.entries(data.collaboration.recommended_roles).map(([artist, role]) => `
+                            <div class="dna-role-item">
+                                <div class="dna-role-artist">${artist}</div>
+                                <div class="dna-role-desc">${role}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        ` : '';
+
+        artistDnaBody.innerHTML = tabsHTML + artistContentHTML + collabHTML;
+
+        // Function to render specific artist
+        function showArtist(index) {
+            const artist = data.artists[index];
+            const contentDiv = document.getElementById('dna-artist-content');
+            if (contentDiv && artist) {
+                contentDiv.innerHTML = renderArtistDNAContent(
+                    artist.vocal || {},
+                    artist.lyrics || {},
+                    artist.musicality || {},
+                    artist.overall_vibe
+                );
+
+                // Re-render icons
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Show first artist by default
+        showArtist(0);
+
+        // Add tab click handlers
+        const tabs = artistDnaBody.querySelectorAll('.dna-artist-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const index = parseInt(tab.dataset.index);
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show corresponding artist
+                showArtist(index);
+            });
+        });
+    }
+
+    // 2c. Render Artist DNA Content (shared by both single and multi)
+    function renderArtistDNAContent(vocal, lyrics, musicality, overall_vibe) {
+        const safeJoin = (arr) => Array.isArray(arr) ? arr.join(' • ') : (arr || "");
+
+        return `
+            <!-- Vocal Section -->
+            <div class="dna-section">
+                <div class="dna-section-header">
+                    <i data-lucide="mic"></i> Chất giọng (Vocal)
+                </div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 4px;">
+                    ${vocal.gender || "Không xác định"}
+                </div>
+                <div class="dna-description">
+                    ${vocal.timbre || ""}
+                </div>
+                ${vocal.traits && vocal.traits.length > 0 ? `
+                <div class="dna-tags" style="margin-top: 8px;">
+                    ${vocal.traits.map(t => `<span class="dna-tag">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+                ${vocal.techniques && vocal.techniques.length > 0 ? `
+                <div class="dna-techniques">
+                    ${vocal.techniques.map(t => `<span class="dna-technique-badge">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Lyrics Section -->
+            <div class="dna-section">
+                <div class="dna-section-header">
+                    <i data-lucide="feather"></i> Phong cách viết lời
+                </div>
+                <div class="dna-description">
+                    ${lyrics.style || ""}
+                </div>
+                ${lyrics.themes && lyrics.themes.length > 0 ? `
+                <div class="dna-tags" style="margin-top: 8px;">
+                    ${lyrics.themes.map(t => `<span class="dna-tag">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+                ${lyrics.emotional_spectrum && lyrics.emotional_spectrum.length > 0 ? `
+                <div class="dna-emotion-pills">
+                    ${lyrics.emotional_spectrum.map(e => `<span class="dna-emotion-pill">${e}</span>`).join('')}
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Musicality Section -->
+            <div class="dna-section">
+                <div class="dna-section-header">
+                    <i data-lucide="music-4"></i> Phong cách nhạc
+                </div>
+                ${musicality.genres && musicality.genres.length > 0 ? `
+                <div class="dna-tags">
+                    ${musicality.genres.map(t => `<span class="dna-tag" style="border-color: var(--accent); color: var(--accent);">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+                ${musicality.instruments && musicality.instruments.length > 0 ? `
+                <div class="dna-description">
+                    Nhạc cụ: ${safeJoin(musicality.instruments)}
+                </div>
+                ` : ''}
+                ${musicality.bpm_range ? `
+                <div class="dna-bpm-stat">
+                    <i data-lucide="activity"></i>
+                    ${musicality.bpm_range}
+                </div>
+                ` : ''}
+                ${musicality.signature_sound ? `
+                <div class="dna-signature">
+                    <strong>⚡ Signature Sound:</strong> ${musicality.signature_sound}
+                </div>
+                ` : ''}
+            </div>
+            
+            ${overall_vibe ? `
+            <!-- Overall Vibe -->
+            <div class="dna-overall-vibe">
+                <div class="dna-vibe-title">🌟 OVERALL VIBE</div>
+                <div class="dna-vibe-text">${overall_vibe}</div>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    // 3. Close Modal
+    if (closeArtistDnaModal) {
+        closeArtistDnaModal.addEventListener('click', () => {
+            artistDnaModal.classList.remove('active');
+        });
+    }
+
+    // 4. Apply DNA Params (Simple - Genre Only)
+    if (btnApplyDnaSimple) {
+        btnApplyDnaSimple.addEventListener('click', () => {
+            try {
+                const data = JSON.parse(btnApplyDnaSimple.dataset.dna);
+                applyArtistDNASimple(data);
+                artistDnaModal.classList.remove('active');
+            } catch (e) {
+                updateLog("Lỗi khi áp dụng thông số.");
+            }
+        });
+    }
+
+    // 5. Apply DNA Params (Full - Premium)
+    if (btnApplyDnaFull) {
+        btnApplyDnaFull.addEventListener('click', () => {
+            try {
+                const data = JSON.parse(btnApplyDnaFull.dataset.dna);
+
+                // 1. Apply Simple Params first
+                applyArtistDNASimple(data);
+
+                // 2. Build & Inject Enhanced Prompt
+                const dnaPrompt = buildDNAEnhancedPrompt(data);
+
+                if (customSystemPromptInput) {
+                    // Append or Replace? Let's Append to be safe, or Prepend?
+                    // "Persona" is usually checking for context.
+                    // Let's replace if empty, or append if exists.
+                    const currentPrompt = customSystemPromptInput.value.trim();
+                    if (currentPrompt) {
+                        customSystemPromptInput.value = currentPrompt + "\n\n" + dnaPrompt;
+                    } else {
+                        customSystemPromptInput.value = dnaPrompt;
+                    }
+
+                    // Visual feedback
+                    updateLog("💎 Premium: Đã tích hợp ADN nghệ sĩ vào System Prompt!");
+                }
+
+                artistDnaModal.classList.remove('active');
+                saveState();
+
+            } catch (e) {
+                console.error(e);
+                updateLog("Lỗi khi áp dụng Full DNA.");
+            }
+        });
+    }
+
+    // Helper: Apply Simple Params (Genre, Gender)
+    function applyArtistDNASimple(data) {
+        // Suggest Custom Vibe based on Genres
+        const genres = data.musicality?.genres || data.genres || [];
+        if (genres.length > 0) {
+            const fusedGenre = genres.slice(0, 3).join(', ');
+            customVibeInput.value = fusedGenre;
+            selectedVibe = fusedGenre;
+            restoreVibeChip("");
+        }
+
+        // Auto-set Gender
+        const gender = data.vocal?.gender || data.gender;
+        if (genderSelect.value === 'Random' && gender) {
+            const g = gender.toLowerCase();
+            if (g.includes('nam') && !g.includes('nữ')) genderSelect.value = 'Male Vocals';
+            else if (g.includes('nữ') && !g.includes('nam')) genderSelect.value = 'Female Vocals';
+        }
+
+        updateLog("Đã áp dụng Genre & Gender từ ADN!");
+        saveState();
+    }
+
+    // Helper: Build Enhanced DNA Prompt
+    function buildDNAEnhancedPrompt(data) {
+        let prompt = `=== ARTIST DNA INFLUENCE ===\n`;
+
+        // Handle Multi-Artist
+        if (data.is_collaboration && data.artists) {
+            prompt += `MODE: Collaboration / Fusion\n`;
+            data.artists.forEach(artist => {
+                prompt += `\n>> ARTIST: ${artist.name}\n`;
+                if (artist.vocal) prompt += `- Vocal: ${artist.vocal.timbre} (${(artist.vocal.techniques || []).join(', ')})\n`;
+                if (artist.lyrics) prompt += `- Lyrics: ${artist.lyrics.style} | Themes: ${(artist.lyrics.themes || []).join(', ')}\n`;
+                if (artist.overall_vibe) prompt += `- Vibe: ${artist.overall_vibe}\n`;
+            });
+
+            if (data.collaboration) {
+                prompt += `\n>> FUSION STRATEGY:\n`;
+                prompt += `- Style: ${data.collaboration.fusion_style}\n`;
+                if (data.collaboration.recommended_roles) {
+                    prompt += `- Roles: ${JSON.stringify(data.collaboration.recommended_roles)}\n`;
+                }
+            }
+        } else {
+            // Single Artist
+            const vocal = data.vocal || {};
+            const lyrics = data.lyrics || {};
+            const musicality = data.musicality || {};
+
+            prompt += `- Vocal Style: ${vocal.timbre || ""}\n`;
+            if (vocal.techniques) prompt += `- Vocal Techniques: ${vocal.techniques.join(', ')}\n`;
+
+            prompt += `- Lyrical Style: ${lyrics.style || ""}\n`;
+            if (lyrics.emotional_spectrum) prompt += `- Emotions: ${lyrics.emotional_spectrum.join(', ')}\n`;
+
+            prompt += `- Music Style: ${(musicality.genres || []).join(', ')}\n`;
+            if (musicality.bpm_range) prompt += `- BPM: ${musicality.bpm_range}\n`;
+            if (musicality.signature_sound) prompt += `- Signature: ${musicality.signature_sound}\n`;
+            if (data.overall_vibe) prompt += `- Overall Vibe: ${data.overall_vibe}\n`;
+        }
+
+        prompt += `\nINSTRUCTION: Write lyrics that strictly embody this artistic DNA. Capture the flow, vocabulary, and emotional nuance described above.`;
+
+        return prompt;
+    }
+
     imageUploadBox.addEventListener('click', () => imageInput.click());
 
     imageInput.addEventListener('change', async (e) => {

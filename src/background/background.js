@@ -148,9 +148,88 @@ ${userMessage}
         return true;
     }
 
+    // 8. Analyze Artist DNA
+    if (request.action === "ANALYZE_ARTIST_DNA") {
+        const prompt = Prompts.analyzeArtistDNA(request.artist);
+        callGemini(prompt, request.apiKey, request.model)
+            .then(data => {
+                console.log("[VSunoMaker] AI Raw Response:", data);
+                try {
+                    // Use new robust parsing utility
+                    const result = parseAIJson(data);
+                    sendResponse({ success: true, data: result });
+                } catch (e) {
+                    console.error("[VSunoMaker] Parse Error:", e);
+                    console.error("[VSunoMaker] Failed JSON:", data);
+
+                    // Show more helpful error with snippet
+                    const snippet = data.substring(0, 300) + "...";
+                    sendResponse({
+                        success: false,
+                        error: `Lỗi phân tích JSON: ${e.message}. Hãy thử lại hoặc chọn model khác. Debug: ${snippet}`
+                    });
+                }
+            })
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
+    }
+
 });
 
 // --- HELPER FUNCTIONS ---
+
+function repairBadJson(jsonStr) {
+    try {
+        // 1. Remove Markdown code blocks
+        let clean = jsonStr.replace(/```json\n?|```/g, '').trim();
+
+        // 2. Remove excessive whitespace but preserve structure
+        clean = clean.replace(/\n/g, ' ').replace(/\r/g, '').replace(/\s+/g, ' ');
+
+        // 3. Fix missing commas between adjacent string values
+        clean = clean.replace(/"\s+"/g, '", "');
+
+        // 4. Try to fix common issues with quotes in Vietnamese text
+        // Replace problematic patterns like ": "text, text, text" with safer separators
+        // This is a heuristic approach - look for value strings with multiple commas
+
+        return clean;
+    } catch (e) {
+        console.error('[repairBadJson] Error:', e);
+        return jsonStr;
+    }
+}
+
+// NEW: More robust JSON parsing with multiple fallback strategies
+function parseAIJson(text) {
+    // Strategy 1: Try direct parse
+    try {
+        return JSON.parse(text);
+    } catch (e1) {
+        console.warn('[parseAIJson] Direct parse failed, trying repair...');
+    }
+
+    // Strategy 2: Clean and try again
+    try {
+        const cleaned = repairBadJson(text);
+        return JSON.parse(cleaned);
+    } catch (e2) {
+        console.warn('[parseAIJson] Repaired parse failed, trying extraction...');
+    }
+
+    // Strategy 3: Extract JSON from text
+    try {
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+            const cleaned = repairBadJson(jsonMatch[0]);
+            return JSON.parse(cleaned);
+        }
+    } catch (e3) {
+        console.error('[parseAIJson] All strategies failed:', e3);
+    }
+
+    throw new Error('Could not parse JSON from AI response');
+}
 
 async function handleComposition(request) {
     if (!request.apiKey) throw new Error("Thiếu Gemini API Key.");

@@ -2751,3 +2751,344 @@ footer {
         box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
     }
 }
+/* ==================== ARTIST DNA MODAL ENHANCED STYLES ==================== */
+
+/* Artist DNA Grid */
+.dna-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+/* Artist Tabs (for multi-artist) */
+.dna-artist-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dna-artist-tab {
+    flex: 1;
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dna-artist-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.dna-artist-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(250, 86, 86, 0.3);
+}
+
+/* DNA Sections */
+.dna-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+
+.dna-section:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(250, 86, 86, 0.3);
+    transform: translateY(-2px);
+}
+
+.dna-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.dna-section-header i {
+    width: 16px;
+    height: 16px;
+    color: var(--accent);
+}
+
+.dna-description {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5;
+    margin: 8px 0;
+}
+
+.dna-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dna-tag {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.dna-tag:hover {
+    background: rgba(250, 86, 86, 0.15);
+    border-color: var(--accent);
+    color: white;
+}
+
+/* Techniques Badges */
+.dna-techniques {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.dna-technique-badge {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, rgba(250, 86, 86, 0.2), rgba(255, 71, 87, 0.1));
+    border: 1px solid rgba(250, 86, 86, 0.4);
+    border-radius: 16px;
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* BPM Display */
+.dna-bpm-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #00ff9d;
+    margin-top: 8px;
+}
+
+/* Signature Sound */
+.dna-signature {
+    margin-top: 8px;
+    padding: 10px;
+    background: rgba(138, 99, 210, 0.1);
+    border-left: 3px solid #8a63d2;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-style: italic;
+}
+
+/* Overall Vibe Section */
+.dna-overall-vibe {
+    background: linear-gradient(135deg, rgba(250, 86, 86, 0.15), rgba(138, 99, 210, 0.15));
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.dna-vibe-title {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.dna-vibe-text {
+    font-size: 0.95rem;
+    color: white;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Emotional Spectrum Pills */
+.dna-emotion-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.dna-emotion-pill {
+    padding: 5px 12px;
+    background: rgba(138, 99, 210, 0.15);
+    border: 1px solid rgba(138, 99, 210, 0.3);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #a78bfa;
+    font-weight: 600;
+}
+
+/* Collaboration Insights Section */
+.dna-collaboration-section {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+}
+
+.dna-collab-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #ffc107;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+}
+
+.dna-collab-item {
+    margin-bottom: 14px;
+}
+
+.dna-collab-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 193, 7, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dna-collab-content {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.6;
+}
+
+.dna-collab-traits {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.dna-collab-trait-item {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid rgba(255, 193, 7, 0.5);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.dna-role-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.dna-role-item {
+    padding: 10px 14px;
+    background: rgba(250, 86, 86, 0.1);
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    border-radius: 8px;
+}
+
+.dna-role-artist {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.dna-role-desc {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==================== PREMIUM BUTTON STYLES ==================== */
+
+.dna-action-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Ghost Button (Secondary) */
+.ghost-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.ghost-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.ghost-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Premium Glow Button */
+.glow-button.premium {
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+    border: none;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.glow-button.premium:hover {
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+    transform: translateY(-1px);
+}
+
+.glow-button.premium i {
+    animation: pulse-icon 2s infinite;
+}
+
+@keyframes pulse-icon {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
