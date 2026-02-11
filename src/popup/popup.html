@@ -241,9 +241,55 @@
                                 <input type="text" id="edit-assistant-name" placeholder="Ví dụ: Producer Ballad">
                             </div>
                             <div class="input-panel">
-                                <label>NHÂN CÁCH (SYSTEM PROMPT)</label>
-                                <textarea id="edit-assistant-prompt"
-                                    placeholder="Mô tả vai trò của trợ lý..."></textarea>
+                                <label>AVATAR (EMOJI HOẶC LINK ẢNH)</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="edit-assistant-avatar"
+                                        placeholder="Ví dụ: 🤖 hoặc https://..." style="flex: 1;">
+                                    <button class="icon-btn" id="btn-upload-avatar" title="Tải ảnh lên">
+                                        <i data-lucide="upload"></i>
+                                    </button>
+                                    <input type="file" id="avatar-file-input" accept="image/*" style="display: none;">
+                                </div>
+                            </div>
+                            <div class="input-panel" style="margin-top: 4px;">
+                                <div class="lyrics-prompt-container">
+                                    <div class="lyrics-label">NHÂN CÁCH (SYSTEM PROMPT)</div>
+                                    <textarea id="edit-assistant-prompt"
+                                        placeholder="Mô tả vai trò của trợ lý..."></textarea>
+                                    <div class="lyrics-bottom-bar"></div>
+                                </div>
+                            </div>
+
+                            <div class="input-panel">
+                                <div class="lyrics-prompt-container"
+                                    style="background: #080a08; border-color: rgba(0, 255, 0, 0.05);">
+                                    <div class="lyrics-label" style="color: #4cd137;">CẨM NANG KIẾN THỨC (RULES)</div>
+                                    <textarea id="edit-assistant-knowledge"
+                                        placeholder="Các quy tắc, hướng dẫn cho assistance"></textarea>
+                                    <div class="lyrics-bottom-bar" style="background: #1a2a1a;"></div>
+                                </div>
+                            </div>
+
+                            <div class="settings-grid-2col">
+                                <div class="input-panel">
+                                    <label>CÁ TÍNH / VIBE</label>
+                                    <select id="edit-assistant-vibe">
+                                        <option value="professional">Professional Producer</option>
+                                        <option value="creative">Creative Partner</option>
+                                        <option value="critic">Strict Critic</option>
+                                        <option value="genz">Gen Z / Energy</option>
+                                        <option value="supportive">Supportive Coach</option>
+                                    </select>
+                                </div>
+                                <div class="input-panel">
+                                    <label>ĐỘ SÁNG TẠO</label>
+                                    <select id="edit-assistant-temperature">
+                                        <option value="0.4">Khắt khe (Strict)</option>
+                                        <option value="0.7" selected>Cân bằng (Balanced)</option>
+                                        <option value="0.9">Sáng tạo (Dynamic)</option>
+                                        <option value="1.2">Đột phá (Experimental)</option>
+                                    </select>
+                                </div>
                             </div>
                             <div class="input-panel">
                                 <label>GEMINI API KEY (RIÊNG)</label>
@@ -252,10 +298,16 @@
                             </div>
                             <div class="input-panel">
                                 <label>MODEL</label>
-                                <select id="edit-assistant-model">
-                                    <option value="gemini-2.0-flash">Gemini 2.0 Flash (Nhanh)</option>
-                                    <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro (Thông minh)</option>
-                                </select>
+                                <div class="model-select-wrapper">
+                                    <select id="edit-assistant-model">
+                                        <option value="gemini-2.0-flash">Gemini 2.0 Flash (Nhanh)</option>
+                                        <option value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro (Thông minh)</option>
+                                    </select>
+                                    <button class="icon-btn" id="btn-sync-models" title="Đồng bộ mô hình mới nhất">
+                                        <i data-lucide="refresh-cw"></i>
+                                    </button>
+                                </div>
+                                <div id="sync-status" class="sync-status"></div>
                             </div>
                         </div>
                         <div class="modal-footer">

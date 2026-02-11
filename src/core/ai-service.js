@@ -3,7 +3,7 @@
  * Handles communication with Gemini API
  */
 
-export async function callGemini(promptText, apiKey, model = "gemini-1.5-flash", history = []) {
+export async function callGemini(promptText, apiKey, model = "gemini-1.5-flash", history = [], temperature = 0.7) {
     // Note: Use 1.5-flash for best performance/cost
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
@@ -30,7 +30,12 @@ export async function callGemini(promptText, apiKey, model = "gemini-1.5-flash",
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: contents })
+            body: JSON.stringify({
+                contents: contents,
+                generationConfig: {
+                    temperature: temperature
+                }
+            })
         });
 
         const data = await response.json();

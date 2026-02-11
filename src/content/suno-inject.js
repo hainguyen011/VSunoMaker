@@ -86,6 +86,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         window.shmAssistantChat.open(request.assistant, request.musicContext);
         sendResponse({ success: true });
+    } else if (request.action === "CLOSE_ASSISTANT_CHAT") {
+        if (window.shmAssistantChat) {
+            window.shmAssistantChat.close();
+        }
+        sendResponse({ success: true });
     }
 });
 
@@ -109,12 +114,6 @@ class AssistantChatWindow {
         this.container = document.createElement('div');
         this.container.id = 'shm-assistant-root';
         this.container.style.cssText = `
-            position: fixed !important;
-            bottom: 24px !important;
-            right: 24px !important;
-            width: 340px !important;
-            height: 500px !important;
-            z-index: 2147483647 !important;
             display: none;
             overflow: visible !important;
         `;
@@ -142,7 +141,6 @@ class AssistantChatWindow {
             top: 0 !important;
             left: 0 !important;
             right: auto !important;
-            bottom: auto !important;
             width: 100% !important;
             height: 100% !important;
             margin: 0 !important;
@@ -158,8 +156,12 @@ class AssistantChatWindow {
                     </div>
                 </div>
                 <div class="shm-chat-actions">
-                    <button class="shm-icon-btn" id="shm-minimize" title="Thu nhỏ">_</button>
-                    <button class="shm-icon-btn" id="shm-close" title="Đóng">×</button>
+                    <button class="shm-icon-btn" id="shm-minimize" title="Thu nhỏ">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                    </button>
+                    <button class="shm-icon-btn" id="shm-close" title="Đóng">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
                 </div>
             </div>
             
@@ -167,7 +169,7 @@ class AssistantChatWindow {
 
             <div class="shm-chat-input-area">
                 <div class="shm-context-badge">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 0 0 0-9-9m9 9H3m9 9a9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"></path></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                     Context Synced
                 </div>
                 <div class="shm-input-container">
@@ -217,8 +219,35 @@ class AssistantChatWindow {
         };
 
         // Window Controls
-        closeBtn.onclick = () => this.container.style.display = 'none';
-        minBtn.onclick = () => win.classList.toggle('minimized');
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            this.container.style.display = 'none';
+        };
+        minBtn.onclick = (e) => {
+            e.stopPropagation();
+            // Clear inline positioning to let CSS classes take over for smooth transition
+            this.container.style.top = '';
+            this.container.style.left = '';
+            this.container.style.bottom = '';
+            this.container.style.right = '';
+
+            win.classList.toggle('minimized');
+            this.container.classList.toggle('shm-minimized');
+        };
+
+        // Expand when clicking the bubble (minimized state)
+        win.onclick = () => {
+            if (win.classList.contains('minimized')) {
+                // Clear inline positioning before expanding
+                this.container.style.top = '';
+                this.container.style.left = '';
+                this.container.style.bottom = '';
+                this.container.style.right = '';
+
+                win.classList.remove('minimized');
+                this.container.classList.remove('shm-minimized');
+            }
+        };
 
         // Chat Input
         sendBtn.onclick = () => this.sendMessage();
@@ -242,14 +271,31 @@ class AssistantChatWindow {
         this.messages = assistant.messages || [];
 
         this.shadow.getElementById('shm-name').innerText = assistant.name;
-        this.shadow.getElementById('shm-avatar').innerText = assistant.avatar || '🤖';
+
+        const avatarEl = this.shadow.getElementById('shm-avatar');
+        const isImageUrl = assistant.avatar && (assistant.avatar.startsWith('http') || assistant.avatar.startsWith('data:image'));
+
+        if (isImageUrl) {
+            avatarEl.innerHTML = `<img src="${assistant.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
+        } else {
+            avatarEl.innerText = assistant.avatar || '🤖';
+        }
 
         this.container.style.display = 'block';
+        this.container.classList.remove('shm-minimized');
+        const win = this.shadow.getElementById('shm-window');
+        if (win) win.classList.remove('minimized');
         this.renderMessages();
 
         // Trigger Greeting if new conversation
         if (this.messages.length === 0) {
             this.triggerGreeting();
+        }
+    }
+
+    close() {
+        if (this.container) {
+            this.container.style.display = 'none';
         }
     }
 
@@ -317,6 +363,9 @@ class AssistantChatWindow {
             apiKey: this.activeAssistant.apiKey,
             model: this.activeAssistant.model || 'gemini-2.0-flash',
             systemPrompt: this.activeAssistant.prompt,
+            vibe: this.activeAssistant.vibe,
+            temperature: this.activeAssistant.temperature,
+            knowledgeBase: this.activeAssistant.knowledgeBase,
             musicContext: this.musicContext,
             userMessage: text,
             history: this.messages.slice(0, -1)
@@ -928,7 +977,7 @@ function trackNewSong(sunoData) {
         'saved_vibe',
         'saved_gender',
         'saved_region',
-        'created_works'
+        'tracked_song_ids'
     ], (res) => {
         // Create complete work object
         const work = {
@@ -957,28 +1006,22 @@ function trackNewSong(sunoData) {
             status: 'created'
         };
 
-        // Add to works list
-        let works = res.created_works || [];
-        works.unshift(work); // Add to beginning
+        // Send to Background to save in Dexie
+        chrome.runtime.sendMessage({ action: 'TRACK_NEW_SONG', data: work }, (response) => {
+            if (response && response.success) {
+                console.log(`[VSunoMaker] ✅ Tracked new song (DB): ${sunoData.title}`);
+                showTrackingNotification(sunoData.title);
+            } else {
+                console.error(`[VSunoMaker] Failed to save song:`, response?.error);
+            }
+        });
 
-        // Keep max 50 items
-        if (works.length > 50) {
-            works = works.slice(0, 50);
-        }
-
-        // Mark this song as tracked
+        // Mark this song as tracked and update ONLY tracked_song_ids in local storage
         trackedSongIds.add(sunoData.id);
         const trackedIdsArray = Array.from(trackedSongIds);
 
-        // Save to storage
         chrome.storage.local.set({
-            created_works: works,
             tracked_song_ids: trackedIdsArray
-        }, () => {
-            console.log(`[VSunoMaker] ✅ Tracked new song: ${sunoData.title}`);
-
-            // Show notification
-            showTrackingNotification(sunoData.title);
         });
     });
 }
