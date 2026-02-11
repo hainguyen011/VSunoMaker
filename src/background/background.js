@@ -67,33 +67,100 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
-    // AI Assistant Chat
+    // AI Assistant Chat (Individual)
     if (request.action === "CHAT_WITH_ASSISTANT") {
         const { apiKey, model, userMessage, systemPrompt, musicContext, history, vibe, temperature, knowledgeBase } = request;
 
-        // Construct Premium Prompt with Vibe and Knowledge Base
-        const combinedPrompt = `
+        // 1. Get Long-Term Memory
+        chrome.storage.local.get(['long_term_memory'], (res) => {
+            const longTermMemory = res.long_term_memory || [];
+            const memoryContext = longTermMemory.length > 0
+                ? `\n[KÝ ỨC DÀI HẠN (Những điều đã biết về người dùng)]:\n- ${longTermMemory.join('\n- ')}`
+                : '';
+
+            // Construct Premium Prompt with Vibe, Knowledge Base, and Memory
+            const combinedPrompt = `
 ${systemPrompt}
 
 ${vibe ? `[HÀNH VI & CÁ TÍNH (VIBE)]: Hãy đóng vai một ${vibe.toUpperCase()}.` : ''}
 
 ${knowledgeBase ? `[CẨM NĂNG KIẾN THỨC / QUY TẮC CỐ ĐỊNH]:
 ${knowledgeBase}` : ''}
+${memoryContext}
 
 [DỮ LIỆU BẢN PHỐI HIỆN TẠI (CONTEXT)]:
 ${musicContext}
 
 [CHỈ DẪN QUAN TRỌNG]: 
-- Hãy sử dụng dữ liệu trên như tri thức nền để tư vấn. 
-- Đừng lặp lại dữ liệu Context một cách máy móc trừ khi người dùng yêu cầu phân tích cụ thể.
-- Hãy ưu tiên sự tự nhiên, trôi chảy và chuyên môn trong hội thoại.
-
-[CÂU HỎI/YÊU CẦU CỦA NGƯỜI DÙNG]:
+- GIAO TIẾP: Như bạn bè thân thiết. Ngắn gọn (dưới 2 câu nếu có thể).
+- TUYỆT ĐỐI KHÔNG: Giới thiệu bản thân, nói mình là AI/Assistant, hay mô tả job của mình (trừ khi được hỏi).
+- TUYỆT ĐỐI KHÔNG: Dùng văn mẫu, liệt kê context, hay nói sáo rỗng.
+- LUÔN: Đi thẳng vào vấn đề, hoặc "tám" chuyện vui vẻ. Dùng từ ngữ đời thường (ngon, xịn, ảo ma, bác, tui...).
+- Nếu người dùng chào, chỉ cần chào lại ngắn gọn + 1 câu hỏi thăm hoặc nhận xét siêu ngắn về nhạc đang làm.
+- GHI NHỚ: Nếu có thông tin quan trọng về sở thích/thói quen của người dùng (tên, gu nhạc, ghét gì...), hãy tự động ghi nhớ bằng cú pháp cuối câu: [[MEMORY: nội dung cần nhớ]]. Ví dụ: [[MEMORY: Người dùng thích lofi chill]].
 ${userMessage}
+            `.trim();
+
+            // Pass temperature to the AI service
+            callGemini(combinedPrompt, apiKey, model, history, parseFloat(temperature || 0.7))
+                .then(async (data) => {
+                    // 2. Process Memory Tags
+                    let rawResponse = data;
+                    const memoryRegex = /\[\[MEMORY:\s*(.*?)\]\]/g;
+                    let match;
+                    const newMemories = [];
+
+                    while ((match = memoryRegex.exec(rawResponse)) !== null) {
+                        newMemories.push(match[1].trim());
+                    }
+
+                    // Remove tags from user view
+                    const cleanResponse = rawResponse.replace(memoryRegex, '').trim();
+
+                    // Save new memories
+                    if (newMemories.length > 0) {
+                        const currentMem = (await chrome.storage.local.get(['long_term_memory'])).long_term_memory || [];
+                        const updatedMem = [...new Set([...currentMem, ...newMemories])]; // Unique
+                        await chrome.storage.local.set({ long_term_memory: updatedMem });
+                        console.log("Saved new memories:", newMemories);
+                    }
+
+                    sendResponse({ success: true, data: cleanResponse });
+                })
+                .catch(err => sendResponse({ success: false, error: err.message }));
+        });
+
+        return true; // Keep channel open
+    }
+
+    // AI Council Chat (Group)
+    if (request.action === "CHAT_WITH_COUNCIL") {
+        const { apiKey, model, userMessage, council, musicContext, history } = request;
+
+        // Construct Roundtable Prompt
+        const membersInfo = council.members.map(m => `- **${m.name}**: ${m.prompt}`).join('\n');
+
+        const roundtablePrompt = `
+[HỆ THỐNG]: ĐÂY LÀ PHÒNG HỘI ĐỒNG (ROUNDTABLE). 
+Bạn được giao nhiệm vụ mô phỏng một cuộc thảo luận giữa các chuyên gia AI sau đây:
+
+${membersInfo}
+
+[DỮ LIỆU BẢN PHỐI HIỆN TẠI (CONTEXT)]:
+${musicContext}
+
+[YÊU CẦU THẢO LUẬN]:
+"${userMessage}"
+
+[QUY TẮC PHÒNG HỌP]:
+1. Hãy trình bày quan điểm của TẤT CẢ hoặc MỘT VÀI thành viên phù hợp nhất với câu hỏi.
+2. Sử dụng định dạng: **[Tên Trợ Lý]**: [Nội dung phản hồi].
+3. Các thành viên có thể đồng ý, phản biện hoặc bổ sung ý kiến cho nhau để giúp người dùng có kết quả tốt nhất.
+4. Giữ phong cách chuyên nghiệp, sáng tạo và bám sát Context âm nhạc.
+5. Luôn trả lời bằng tiếng Việt.
         `.trim();
 
-        // Pass temperature to the AI service
-        callGemini(combinedPrompt, apiKey, model, history, parseFloat(temperature || 0.7))
+        callGemini(roundtablePrompt, apiKey, model, history, 0.8) // High creativity for discussion
             .then(data => sendResponse({ success: true, data: data }))
             .catch(err => sendResponse({ success: false, error: err.message }));
         return true;

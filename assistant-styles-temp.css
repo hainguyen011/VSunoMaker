@@ -215,8 +215,6 @@
     border-color: var(--accent);
     border-style: solid;
     background: linear-gradient(135deg, rgba(250, 86, 86, 0.08), rgba(138, 99, 210, 0.08));
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(250, 86, 86, 0.15);
 }
 
 .add-assistant-card .plus-icon {
