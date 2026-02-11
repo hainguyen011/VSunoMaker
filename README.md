@@ -3,12 +3,12 @@
 <div align="center">
 
 ![VSunoMaker Banner](https://img.shields.io/badge/VSunoMaker-AI_Music_Studio-ff4757?style=for-the-badge&logo=applemusic&logoColor=white)
-![Version](https://img.shields.io/badge/Version-2.0_Pro-blue?style=for-the-badge)
+![Version](https://img.shields.io/badge/Version-1.3.0_Premium-red?style=for-the-badge)
 ![Powered By](https://img.shields.io/badge/Powered_By-Google_Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white)
 
 **Biến trình duyệt của bạn thành Studio Sản Xuất Âm Nhạc AI chuyên nghiệp trên Suno.com**
 
-[Cài Đặt](#cài-đặt) • [Tính Năng](#tính-năng-nổi-bật) • [Demo](#demo) • [Tác Giả](#tác-giả)
+[Cài Đặt](#cài-đặt) • [Tính Năng](#tính-năng-nổi-bật) • [Ủng Hộ](#ủng-hộ) • [Nội Quy](./RULES.md) • [Bản Quyền](./LICENSE.md)
 
 </div>
 
@@ -18,17 +18,29 @@
 
 **VSunoMaker.AI** là tiện ích mở rộng (Chrome Extension) tối thượng dành cho Creators trên Suno.com. Không chỉ đơn thuần là công cụ điền lời, VSunoMaker tích hợp sức mạnh của **Google Gemini** để cung cấp tư duy nhạc lý chuyên sâu, giúp bạn kiểm soát hoàn toàn quy trình sáng tác từ ý tưởng (Concept) đến bản hit hoàn chỉnh (Masterpiece).
 
-Phiên bản **v2.0 Pro** mang đến giao diện **Studio Control Center** hoàn toàn mới, biến trải nghiệm sáng tác trở nên trực quan và đầy cảm hứng.
+Phiên bản **v1.3.0 Premium** mang đến nâng cấp đột phá về trí tuệ AI và khả năng cá nhân hóa trợ lý âm nhạc.
 
 ---
 
 ## Tính Năng Nổi Bật
 
-### Studio Pro Interface
-Giao diện điều khiển trung tâm với thiết kế hiện đại, tối ưu hóa thao tác người dùng.
-- **Smart Switch**: Chuyển đổi mượt mà giữa chế độ tư duy **Ý Tưởng (Concept)** và chế độ **Lời Nhạc (Lyrics)**.
-- **Instrumental Toggle**: Chế độ tạo nhạc không lời chuyên nghiệp với đèn báo trạng thái Neon.
-- **Accordion Premium**: Các công cụ nâng cao được tổ chức gọn gàng, dễ dàng truy cập.
+### Premium AI Council Hub (Mới)
+Trung tâm điều hành trợ lý AI với khả năng tùy biến sâu:
+- **Personality Select (Vibe)**: Chọn "giọng nói" và phong cách tư vấn cho AI (VD: Gen Z Producer, Strict Critic, Professional Mentor).
+- **Creative Control (Temperature)**: Tùy chỉnh độ "phiêu" của AI từ ổn định tuyệt đối đến bùng nổ sáng tạo.
+- **Style Guide Knowledge Base**: Lưu trữ "Cẩm nang kiến thức" hoặc Artist DNA cố định để AI luôn tuân thủ trong mọi cuộc hội thoại.
+- **Dynamic Model Sync**: Nút làm mới danh sách Model giúp bạn luôn cập nhật những mô hình Gemini mới nhất (Pro, Ultra, Flash) ngay khi Google ra mắt.
+
+### Lyrics-Style Configuration
+Giao diện nhập liệu chuyên dụng mô phỏng môi trường soạn thảo lyrics:
+- **Lyrics Box Aesthetic**: Các ô nhập Nhân cách và Kiến thức được thiết kế theo phong cách Lyrics của Suno.
+- **Draggable Comfort**: Thanh resizer thông minh giúp bạn linh hoạt điều chỉnh không gian soạn thảo.
+- **Circular Pro Avatars**: Hệ thống avatar tròn phong cách Profile chuyên nghiệp.
+
+### Smart Chat & Context Logic
+- **Ground Truth Injection**: AI tự động gộp Vibe và Knowledge Base vào mọi câu trả lời, đảm bảo tính nhất quán.
+- **Context Synced**: Tự động đồng bộ bối cảnh bản phối hiện tại trên trang Suno để tư vấn chính xác nhất.
+- **Messenger Bubble**: Cửa sổ chat dạng bong bóng bóng mượt, snap vào góc màn hình và hỗ trợ dragging.
 
 ### See The Sound (Nhìn Là Nghe)
 Công nghệ chuyển đổi hình ảnh thành âm thanh đa giác quan.
@@ -64,6 +76,14 @@ Hệ thống thông báo trạng thái đậm chất Cyberpunk/Terminal.
 
 ---
 
+## Ủng Hộ
+
+Nếu bạn thấy **VSunoMaker** hữu ích và giúp bạn tiết kiệm thời gian trong việc sáng tác, hãy cân nhắc tặng tác giả một ly cà phê để tiếp thêm động lực phát trìến các tính năng mới nhé!
+
+<a href="https://www.buymeacoffee.com/hainguyen011" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+---
+
 ## Tác Giả
 
 Dự án được phát triển và duy trì bởi **Richard Nguyen (Hai Nguyen)**.
@@ -82,50 +102,12 @@ Dự án được phát triển và duy trì bởi **Richard Nguyen (Hai Nguyen)
 
 ---
 
-## Nội quy sử dụng VSunoMaker
+## Liên Kết Hữu Ích
 
-VSunoMaker được xây dựng với mục tiêu **hỗ trợ sáng tạo âm nhạc cá nhân**, đóng vai trò như một **người bạn đồng hành AI trong quá trình lên ý tưởng**, không phải là công cụ thay thế con người hay nền tảng gốc.
-
-Khi sử dụng VSunoMaker, người dùng cần tuân thủ các nguyên tắc sau:
-
-### 1. Phạm vi và mục đích sử dụng
-
-* VSunoMaker là công cụ hỗ trợ xây dựng ý tưởng âm nhạc cá nhân.
-* Công cụ hoạt động như một lớp wrapper hỗ trợ tương tác với các chức năng hiện có của nền tảng **suno.com**.
-* VSunoMaker **không thay thế**, **không sao chép**, và **không đại diện** cho suno.com hay bất kỳ dịch vụ nào liên quan.
-
-### 2. Tôn trọng nền tảng gốc
-
-* Người dùng có trách nhiệm tuân thủ **điều khoản sử dụng và chính sách** của suno.com khi sử dụng VSunoMaker.
-* VSunoMaker không can thiệp, chỉnh sửa hay mở rộng trái phép các chức năng cốt lõi của suno.com.
-* Mọi nội dung được tạo ra vẫn chịu sự chi phối của nền tảng gốc.
-
-### 3. Sử dụng có trách nhiệm
-
-* Không sử dụng VSunoMaker cho mục đích sao chép, đạo nhạc, hoặc tái tạo các tác phẩm có bản quyền một cách trái phép.
-* Không sử dụng công cụ để tạo ra nội dung tiêu cực, gây hại, vi phạm pháp luật hoặc chuẩn mực cộng đồng.
-* Người dùng chịu hoàn toàn trách nhiệm đối với nội dung mình tạo ra và cách nội dung đó được sử dụng.
-
-### 4. Tinh thần sáng tạo
-
-* VSunoMaker được thiết kế để **khơi gợi ý tưởng**, không nhằm thay thế tư duy sáng tạo cá nhân.
-* Công cụ khuyến khích người dùng xem AI như một **đối tác hỗ trợ**, không phải nguồn tạo ra sản phẩm cuối cùng.
-* Giá trị cốt lõi của VSunoMaker nằm ở quá trình sáng tạo, thử nghiệm và phát triển phong cách cá nhân.
-
-### 5. Giới hạn trách nhiệm
-
-* VSunoMaker không chịu trách nhiệm đối với các tranh chấp bản quyền, nội dung, hoặc hệ quả phát sinh từ việc sử dụng công cụ.
-* Người dùng hiểu và chấp nhận rằng VSunoMaker được cung cấp với mục đích hỗ trợ, không bảo đảm kết quả đầu ra.
+- 📜 [Nội quy sử dụng (RULES.md)](./RULES.md)
+- ⚖️ [Thông tin bản quyền (LICENSE.md)](./LICENSE.md)
 
 ---
-
-VSunoMaker được tạo ra để **làm âm nhạc một cách tử tế, sáng tạo và có ý thức**.
-Nếu bạn dùng nó như một người bạn làm nhạc AI, bạn đang dùng đúng cách.
-
-
-## License
-
-Sản phẩm được phân phối dưới giấy phép **MIT License**.
 
 <div align="right">   
 Made with ❤️ and 🎵 by Richard Nguyen
