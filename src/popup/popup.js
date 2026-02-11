@@ -2,6 +2,7 @@ import { updateLog, renderMarkdown, enableCustomResize } from '../shared/utils.j
 import { initMagicPolish } from '../features/magic-polish/index.js';
 import { initSettings } from '../features/settings/index.js';
 import { CustomSelect } from '../shared/ui-components/custom-select.js';
+import { StorageService } from '../services/storage-service.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- UI ELEMENTS ---
@@ -68,13 +69,448 @@ document.addEventListener('DOMContentLoaded', () => {
     const editAssistantName = document.getElementById('edit-assistant-name');
     const editAssistantPrompt = document.getElementById('edit-assistant-prompt');
     const editAssistantKey = document.getElementById('edit-assistant-key');
+    const editAssistantAvatar = document.getElementById('edit-assistant-avatar');
     const editAssistantModel = document.getElementById('edit-assistant-model');
+    const editAssistantVibe = document.getElementById('edit-assistant-vibe');
+    const editAssistantTemperature = document.getElementById('edit-assistant-temperature');
+    const editAssistantKnowledge = document.getElementById('edit-assistant-knowledge');
     const btnSaveAssistant = document.getElementById('btn-save-assistant');
     const btnDeleteAssistant = document.getElementById('btn-delete-assistant');
+    const btnUploadAvatar = document.getElementById('btn-upload-avatar');
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    const btnSyncModels = document.getElementById('btn-sync-models');
+    const syncStatus = document.getElementById('sync-status');
 
     let currentAssistants = [];
     let activeAssistantId = null;
     let editingAssistantId = null;
+
+    // --- ARTIST DNA REVIEW ELEMENTS ---
+    const btnReviewArtist = document.getElementById('btn-review-artist');
+    // artistInput is already declared elsewhere
+    const artistDnaModal = document.getElementById('artist-dna-modal');
+    const closeArtistDnaModal = document.getElementById('close-artist-dna-modal');
+    const artistDnaBody = document.getElementById('artist-dna-body');
+    const btnApplyDnaSimple = document.getElementById('btn-apply-dna-simple');
+    const btnApplyDnaFull = document.getElementById('btn-apply-dna-full');
+
+    // 1. Open Review Modal
+    if (btnReviewArtist) {
+        btnReviewArtist.addEventListener('click', async () => {
+            const artistName = artistInput.value.trim();
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!artistName) {
+                updateLog("Vui lòng nhập tên nghệ sĩ trước!");
+                artistInput.focus();
+                return;
+            }
+            if (!apiKey) {
+                updateLog("Lỗi: Cần API Key để phân tích.");
+                return;
+            }
+
+            // Open Modal & Show Loading
+            artistDnaModal.classList.add('active');
+            artistDnaBody.innerHTML = `
+                <div class="loading-dna" style="text-align: center; padding: 40px 0;">
+                    <div class="pulse-indicator" style="margin: 0 auto 15px;"></div>
+                    <div style="font-size: 0.8rem; color: var(--text-dim);">Đang giải mã ADN âm nhạc và mô phỏng chất giọng...</div>
+                </div>
+            `;
+            btnApplyDnaSimple.disabled = true;
+            btnApplyDnaFull.disabled = true;
+
+            // Call API
+            try {
+                chrome.runtime.sendMessage({
+                    action: "ANALYZE_ARTIST_DNA",
+                    artist: artistName,
+                    apiKey: apiKey,
+                    model: modelSelect.value
+                }, (response) => {
+                    if (response && response.success) {
+                        renderArtistDNA(response.data);
+                        btnApplyDnaSimple.disabled = false;
+                        btnApplyDnaFull.disabled = false;
+                    } else {
+                        artistDnaBody.innerHTML = `<div style="text-align:center; color: #ff5f5f; padding: 20px;">
+                            Lỗi: ${response.error || "Không thể phân tích nghệ sĩ này."}
+                        </div>`;
+                    }
+                });
+            } catch (err) {
+                artistDnaBody.innerHTML = `<div style="text-align:center; color: #ff5f5f; padding: 20px;">Lỗi kết nối.</div>`;
+            }
+        });
+    }
+
+    // 2. Render DNA Result
+    function renderArtistDNA(data) {
+        // Safe access helper
+        const safeJoin = (arr) => Array.isArray(arr) ? arr.join(' • ') : (arr || "");
+
+        // Check if multi-artist collaboration
+        if (data.is_collaboration && data.artists && data.artists.length > 0) {
+            renderMultiArtistDNA(data);
+        } else {
+            renderSingleArtistDNA(data);
+        }
+
+        // Render Icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+
+        // Store data for Apply action
+        btnApplyDnaSimple.dataset.dna = JSON.stringify(data);
+        btnApplyDnaFull.dataset.dna = JSON.stringify(data);
+    }
+
+    // 2a. Render Single Artist DNA
+    function renderSingleArtistDNA(data) {
+        const safeJoin = (arr) => Array.isArray(arr) ? arr.join(' • ') : (arr || "");
+
+        // Extract data
+        const vocal = data.vocal || {};
+        const lyrics = data.lyrics || {};
+        const musicality = data.musicality || {};
+
+        const html = `
+            <div class="dna-grid">
+                ${renderArtistDNAContent(vocal, lyrics, musicality, data.overall_vibe)}
+            </div>
+        `;
+
+        artistDnaBody.innerHTML = html;
+    }
+
+    // 2b. Render Multi-Artist DNA
+    function renderMultiArtistDNA(data) {
+        let currentArtistIndex = 0;
+
+        // Build tabs HTML
+        const tabsHTML = `
+            <div class="dna-artist-tabs">
+                ${data.artists.map((artist, index) => `
+                    <div class="dna-artist-tab ${index === 0 ? 'active' : ''}" data-index="${index}">
+                        ${artist.name || `Nghệ sĩ ${index + 1}`}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+
+        // Build artist content (initially show first artist)
+        const artistContentHTML = `<div id="dna-artist-content" class="dna-grid"></div>`;
+
+        // Build collaboration section
+        const collabHTML = data.collaboration ? `
+            <div class="dna-collaboration-section">
+                <div class="dna-collab-header">
+                    <i data-lucide="zap"></i>
+                    COLLABORATION INSIGHTS
+                </div>
+                
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="sparkles"></i> Fusion Style
+                    </div>
+                    <div class="dna-collab-content">
+                        ${data.collaboration.fusion_style || ""}
+                    </div>
+                </div>
+                
+                ${data.collaboration.complementary_traits && data.collaboration.complementary_traits.length > 0 ? `
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="git-compare"></i> Complementary Traits
+                    </div>
+                    <div class="dna-collab-traits">
+                        ${data.collaboration.complementary_traits.map(trait => `
+                            <div class="dna-collab-trait-item">${trait}</div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${data.collaboration.signature_tracks_vibe ? `
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="disc"></i> Signature Vibe
+                    </div>
+                    <div class="dna-collab-content">
+                        ${data.collaboration.signature_tracks_vibe}
+                    </div>
+                </div>
+                ` : ''}
+                
+                ${data.collaboration.recommended_roles ? `
+                <div class="dna-collab-item">
+                    <div class="dna-collab-label">
+                        <i data-lucide="target"></i> Recommended Roles
+                    </div>
+                    <div class="dna-role-list">
+                        ${Object.entries(data.collaboration.recommended_roles).map(([artist, role]) => `
+                            <div class="dna-role-item">
+                                <div class="dna-role-artist">${artist}</div>
+                                <div class="dna-role-desc">${role}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        ` : '';
+
+        artistDnaBody.innerHTML = tabsHTML + artistContentHTML + collabHTML;
+
+        // Function to render specific artist
+        function showArtist(index) {
+            const artist = data.artists[index];
+            const contentDiv = document.getElementById('dna-artist-content');
+            if (contentDiv && artist) {
+                contentDiv.innerHTML = renderArtistDNAContent(
+                    artist.vocal || {},
+                    artist.lyrics || {},
+                    artist.musicality || {},
+                    artist.overall_vibe
+                );
+
+                // Re-render icons
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        // Show first artist by default
+        showArtist(0);
+
+        // Add tab click handlers
+        const tabs = artistDnaBody.querySelectorAll('.dna-artist-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const index = parseInt(tab.dataset.index);
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Show corresponding artist
+                showArtist(index);
+            });
+        });
+    }
+
+    // 2c. Render Artist DNA Content (shared by both single and multi)
+    function renderArtistDNAContent(vocal, lyrics, musicality, overall_vibe) {
+        const safeJoin = (arr) => Array.isArray(arr) ? arr.join(' • ') : (arr || "");
+
+        return `
+            <!-- Vocal Section -->
+            <div class="dna-section">
+                <div class="dna-section-header">
+                    <i data-lucide="mic"></i> Chất giọng (Vocal)
+                </div>
+                <div style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 4px;">
+                    ${vocal.gender || "Không xác định"}
+                </div>
+                <div class="dna-description">
+                    ${vocal.timbre || ""}
+                </div>
+                ${vocal.traits && vocal.traits.length > 0 ? `
+                <div class="dna-tags" style="margin-top: 8px;">
+                    ${vocal.traits.map(t => `<span class="dna-tag">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+                ${vocal.techniques && vocal.techniques.length > 0 ? `
+                <div class="dna-techniques">
+                    ${vocal.techniques.map(t => `<span class="dna-technique-badge">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Lyrics Section -->
+            <div class="dna-section">
+                <div class="dna-section-header">
+                    <i data-lucide="feather"></i> Phong cách viết lời
+                </div>
+                <div class="dna-description">
+                    ${lyrics.style || ""}
+                </div>
+                ${lyrics.themes && lyrics.themes.length > 0 ? `
+                <div class="dna-tags" style="margin-top: 8px;">
+                    ${lyrics.themes.map(t => `<span class="dna-tag">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+                ${lyrics.emotional_spectrum && lyrics.emotional_spectrum.length > 0 ? `
+                <div class="dna-emotion-pills">
+                    ${lyrics.emotional_spectrum.map(e => `<span class="dna-emotion-pill">${e}</span>`).join('')}
+                </div>
+                ` : ''}
+            </div>
+
+            <!-- Musicality Section -->
+            <div class="dna-section">
+                <div class="dna-section-header">
+                    <i data-lucide="music-4"></i> Phong cách nhạc
+                </div>
+                ${musicality.genres && musicality.genres.length > 0 ? `
+                <div class="dna-tags">
+                    ${musicality.genres.map(t => `<span class="dna-tag" style="border-color: var(--accent); color: var(--accent);">${t}</span>`).join('')}
+                </div>
+                ` : ''}
+                ${musicality.instruments && musicality.instruments.length > 0 ? `
+                <div class="dna-description">
+                    Nhạc cụ: ${safeJoin(musicality.instruments)}
+                </div>
+                ` : ''}
+                ${musicality.bpm_range ? `
+                <div class="dna-bpm-stat">
+                    <i data-lucide="activity"></i>
+                    ${musicality.bpm_range}
+                </div>
+                ` : ''}
+                ${musicality.signature_sound ? `
+                <div class="dna-signature">
+                    <strong>⚡ Signature Sound:</strong> ${musicality.signature_sound}
+                </div>
+                ` : ''}
+            </div>
+            
+            ${overall_vibe ? `
+            <!-- Overall Vibe -->
+            <div class="dna-overall-vibe">
+                <div class="dna-vibe-title">🌟 OVERALL VIBE</div>
+                <div class="dna-vibe-text">${overall_vibe}</div>
+            </div>
+            ` : ''}
+        `;
+    }
+
+    // 3. Close Modal
+    if (closeArtistDnaModal) {
+        closeArtistDnaModal.addEventListener('click', () => {
+            artistDnaModal.classList.remove('active');
+        });
+    }
+
+    // 4. Apply DNA Params (Simple - Genre Only)
+    if (btnApplyDnaSimple) {
+        btnApplyDnaSimple.addEventListener('click', () => {
+            try {
+                const data = JSON.parse(btnApplyDnaSimple.dataset.dna);
+                applyArtistDNASimple(data);
+                artistDnaModal.classList.remove('active');
+            } catch (e) {
+                updateLog("Lỗi khi áp dụng thông số.");
+            }
+        });
+    }
+
+    // 5. Apply DNA Params (Full - Premium)
+    if (btnApplyDnaFull) {
+        btnApplyDnaFull.addEventListener('click', () => {
+            try {
+                const data = JSON.parse(btnApplyDnaFull.dataset.dna);
+
+                // 1. Apply Simple Params first
+                applyArtistDNASimple(data);
+
+                // 2. Build & Inject Enhanced Prompt
+                const dnaPrompt = buildDNAEnhancedPrompt(data);
+
+                if (customSystemPromptInput) {
+                    // Append or Replace? Let's Append to be safe, or Prepend?
+                    // "Persona" is usually checking for context.
+                    // Let's replace if empty, or append if exists.
+                    const currentPrompt = customSystemPromptInput.value.trim();
+                    if (currentPrompt) {
+                        customSystemPromptInput.value = currentPrompt + "\n\n" + dnaPrompt;
+                    } else {
+                        customSystemPromptInput.value = dnaPrompt;
+                    }
+
+                    // Visual feedback
+                    updateLog("System Artist Premium: Đã tích hợp ADN nghệ sĩ vào System Prompt!");
+                }
+
+                artistDnaModal.classList.remove('active');
+                saveState();
+
+            } catch (e) {
+                console.error(e);
+                updateLog("Lỗi khi áp dụng Full DNA.");
+            }
+        });
+    }
+
+    // Helper: Apply Simple Params (Genre, Gender)
+    function applyArtistDNASimple(data) {
+        // Suggest Custom Vibe based on Genres
+        const genres = data.musicality?.genres || data.genres || [];
+        if (genres.length > 0) {
+            const fusedGenre = genres.slice(0, 3).join(', ');
+            customVibeInput.value = fusedGenre;
+            selectedVibe = fusedGenre;
+            restoreVibeChip("");
+        }
+
+        // Auto-set Gender
+        const gender = data.vocal?.gender || data.gender;
+        if (genderSelect.value === 'Random' && gender) {
+            const g = gender.toLowerCase();
+            if (g.includes('nam') && !g.includes('nữ')) genderSelect.value = 'Male Vocals';
+            else if (g.includes('nữ') && !g.includes('nam')) genderSelect.value = 'Female Vocals';
+        }
+
+        updateLog("Đã áp dụng Genre & Gender từ ADN!");
+        saveState();
+    }
+
+    // Helper: Build Enhanced DNA Prompt
+    function buildDNAEnhancedPrompt(data) {
+        let prompt = `=== ARTIST DNA INFLUENCE ===\n`;
+
+        // Handle Multi-Artist
+        if (data.is_collaboration && data.artists) {
+            prompt += `MODE: Collaboration / Fusion\n`;
+            data.artists.forEach(artist => {
+                prompt += `\n>> ARTIST: ${artist.name}\n`;
+                if (artist.vocal) prompt += `- Vocal: ${artist.vocal.timbre} (${(artist.vocal.techniques || []).join(', ')})\n`;
+                if (artist.lyrics) prompt += `- Lyrics: ${artist.lyrics.style} | Themes: ${(artist.lyrics.themes || []).join(', ')}\n`;
+                if (artist.overall_vibe) prompt += `- Vibe: ${artist.overall_vibe}\n`;
+            });
+
+            if (data.collaboration) {
+                prompt += `\n>> FUSION STRATEGY:\n`;
+                prompt += `- Style: ${data.collaboration.fusion_style}\n`;
+                if (data.collaboration.recommended_roles) {
+                    prompt += `- Roles: ${JSON.stringify(data.collaboration.recommended_roles)}\n`;
+                }
+            }
+        } else {
+            // Single Artist
+            const vocal = data.vocal || {};
+            const lyrics = data.lyrics || {};
+            const musicality = data.musicality || {};
+
+            prompt += `- Vocal Style: ${vocal.timbre || ""}\n`;
+            if (vocal.techniques) prompt += `- Vocal Techniques: ${vocal.techniques.join(', ')}\n`;
+
+            prompt += `- Lyrical Style: ${lyrics.style || ""}\n`;
+            if (lyrics.emotional_spectrum) prompt += `- Emotions: ${lyrics.emotional_spectrum.join(', ')}\n`;
+
+            prompt += `- Music Style: ${(musicality.genres || []).join(', ')}\n`;
+            if (musicality.bpm_range) prompt += `- BPM: ${musicality.bpm_range}\n`;
+            if (musicality.signature_sound) prompt += `- Signature: ${musicality.signature_sound}\n`;
+            if (data.overall_vibe) prompt += `- Overall Vibe: ${data.overall_vibe}\n`;
+        }
+
+        prompt += `\nINSTRUCTION: Write lyrics that strictly embody this artistic DNA. Capture the flow, vocabulary, and emotional nuance described above.`;
+
+        return prompt;
+    }
 
     imageUploadBox.addEventListener('click', () => imageInput.click());
 
@@ -977,7 +1413,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const restoreChips = (containerId, savedVals) => {
-            if (!savedVals) return;
+            if (!savedVals || !Array.isArray(savedVals)) return;
             const container = document.getElementById(containerId);
             if (!container) return;
             container.querySelectorAll('.pro-chip').forEach(chip => {
@@ -1008,7 +1444,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateInputModeUI();
         }
 
-        renderHistory(res.prompt_history || []);
+        renderHistoryItems(res.prompt_history || []); // Legacy fallback
+        loadHistory(); // Load from Dexie
     });
 
     // --- INITIALIZATION SEQUENCE ---
@@ -1117,29 +1554,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- HISTORY LOGIC ---
+    // --- HISTORY LOGIC ---
     function addToHistory(concept, vibe, type = 'compose', meta = null) {
-        chrome.storage.local.get(['prompt_history'], (res) => {
-            let history = res.prompt_history || [];
-            const newItem = {
-                id: Date.now(),
-                concept: concept,
-                vibe: vibe,
-                type: type,
-                meta: meta,
-                timestamp: new Date().toLocaleString('vi-VN')
-            };
+        const newItem = {
+            concept: concept,
+            vibe: vibe,
+            type: type,
+            meta: meta,
+            timestamp: Date.now(),
+            createdAt: new Date().toISOString(),
+            status: 'draft' // Distinguish from 'created' songs
+        };
 
-            // Keep max 20 items
-            history.unshift(newItem);
-            if (history.length > 20) history.pop();
-
-            chrome.storage.local.set({ prompt_history: history });
-            renderHistory(history);
+        StorageService.addWork(newItem).then(() => {
+            loadHistory();
         });
     }
 
-    function renderHistory(history) {
+    function loadHistory() {
         if (!historyContainer) return;
+
+        StorageService.getRecentWorks(50).then(works => {
+            renderHistoryItems(works);
+        });
+    }
+
+    function renderHistoryItems(history) {
         historyContainer.innerHTML = '';
         if (!history || history.length === 0) {
             historyContainer.innerHTML = '<div class="empty-state">Chưa có lịch sử sáng tác.</div>';
@@ -1149,104 +1589,103 @@ document.addEventListener('DOMContentLoaded', () => {
         history.forEach((item, index) => {
             const el = document.createElement('div');
             el.className = 'history-item';
+
+            // Handle both Prompts (drafts) and Songs (created)
+            const isSong = item.sunoId || item.status === 'created';
             const isPolish = item.type === 'polish';
-            el.innerHTML = `
-                <div class="history-item-main">
-                    <div class="history-concept">${renderMarkdown(item.concept)}</div>
-                    <div class="history-meta">
-                        ${isPolish ? '<span class="history-tag polish">CHỈNH SỬA</span>' : '<span class="history-tag compose">SÁNG TÁC</span>'}
-                        <span class="vibe-tag">${item.vibe}</span>
-                        <span>${item.timestamp.split(' ')[1]}</span> 
+
+            // Format timestamp
+            const dateStr = new Date(item.timestamp).toLocaleString('vi-VN');
+            const timeStr = dateStr.split(' ')[1] || dateStr;
+
+            if (isSong) {
+                // Render Song Item
+                el.innerHTML = `
+                    <div class="history-item-main">
+                        <div style="font-weight: bold; color: var(--accent); margin-bottom: 4px;">${item.title || 'Untitled Song'}</div>
+                        <div class="history-concept" style="font-size: 0.8rem; color: #ccc;">${renderMarkdown(item.concept || item.vibe || '')}</div>
+                        <div class="history-meta">
+                            <span class="history-tag" style="background: var(--success-color);">SONG</span>
+                            <span class="vibe-tag">${item.vibe || 'Suno'}</span>
+                            <span>${timeStr}</span> 
+                        </div>
+                         ${item.audioUrl ? `<a href="${item.audioUrl}" target="_blank" class="mini-btn success" style="margin-top: 6px; display:inline-block; font-size: 0.7rem; padding: 2px 8px;">Nghe</a>` : ''}
+                         ${item.sunoUrl ? `<a href="${item.sunoUrl}" target="_blank" class="mini-btn" style="margin-top: 6px; margin-left: 4px; display:inline-block; font-size: 0.7rem; padding: 2px 8px;">Mở Suno</a>` : ''}
                     </div>
-                </div>
-                <div class="history-actions">
-                    <button class="history-action-btn continue-btn" title="Tiếp tục chỉnh sửa">
-                        <i data-lucide="pencil-line"></i>
-                    </button>
-                    <button class="delete-history-btn" title="Xóa">×</button>
-                </div>
-            `;
+                    <div class="history-actions">
+                        <button class="delete-history-btn" data-id="${item.id}" title="Xóa">×</button>
+                    </div>
+                `;
+            } else {
+                // Render Prompt Item (Draft)
+                el.innerHTML = `
+                    <div class="history-item-main">
+                        <div class="history-concept">${renderMarkdown(item.concept)}</div>
+                        <div class="history-meta">
+                            ${isPolish ? '<span class="history-tag polish">CHỈNH SỬA</span>' : '<span class="history-tag compose">SÁNG TÁC</span>'}
+                            <span class="vibe-tag">${item.vibe}</span>
+                            <span>${timeStr}</span> 
+                        </div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="history-action-btn continue-btn" title="Tiếp tục chỉnh sửa">
+                            <i data-lucide="pencil-line"></i>
+                        </button>
+                        <button class="delete-history-btn" data-id="${item.id}" title="Xóa">×</button>
+                    </div>
+                `;
+            }
 
-            // Continue Editing / Restore logic
-            const restoreAction = () => {
-                conceptInput.value = item.concept;
-                selectedVibe = item.vibe;
-                customVibeInput.value = "";
-
-                // If it's a polish item, auto-switch to LYRICS mode
-                if (isPolish && !inputModeToggle.checked) {
-                    inputModeToggle.checked = true;
-                    inputModeToggle.dispatchEvent(new Event('change'));
-                }
-
-                let matched = false;
-                vibeChips.forEach(chip => {
-                    if (chip.dataset.vibe === item.vibe) {
-                        chip.classList.add('active');
-                        matched = true;
+            // Restore Logic for Drafts
+            const continueBtn = el.querySelector('.continue-btn');
+            if (continueBtn) {
+                continueBtn.addEventListener('click', () => {
+                    conceptInput.value = item.concept;
+                    if (item.vibe) {
+                        // Restore vibe logic... (simplified here for brevity, assuming existing restoreVibe present or manual set)
+                        customVibeInput.value = item.vibe;
+                        selectedVibe = item.vibe;
+                        saveState();
+                    }
+                    if (item.type === 'polish') {
+                        // Switch tab?
                     } else {
-                        chip.classList.remove('active');
+                        document.querySelector('[data-tab="compose"]').click();
+                    }
+                    updateLog("Đã khôi phục nội dung từ lịch sử.");
+                });
+            }
+
+            // Delete Logic
+            const deleteBtn = el.querySelector('.delete-history-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (confirm('Xóa mục này?')) {
+                        StorageService.deleteWork(item.id).then(() => {
+                            loadHistory();
+                        });
                     }
                 });
-
-                if (!matched) {
-                    customVibeInput.value = item.vibe;
-                }
-
-                saveState();
-
-                tabs.forEach(t => t.classList.remove('active'));
-                tabContents.forEach(c => c.classList.remove('active'));
-                const composeTabBtn = document.querySelector('[data-tab="compose"]');
-                if (composeTabBtn) composeTabBtn.classList.add('active');
-                const composeTabContent = document.getElementById('tab-compose');
-                if (composeTabContent) composeTabContent.classList.add('active');
-
-                updateLog(`Khôi phục: ${isPolish ? 'Bản chỉnh sửa' : 'Ý tưởng sáng tác'}...`);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            };
-
-            el.addEventListener('click', (e) => {
-                if (e.target.closest('.delete-history-btn')) return;
-                restoreAction();
-            });
-
-            const continueBtn = el.querySelector('.continue-btn');
-            if (continueBtn) continueBtn.onclick = (e) => {
-                e.stopPropagation();
-                restoreAction();
-            };
-
-            // Delete single item logic
-            const deleteBtn = el.querySelector('.delete-history-btn');
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                chrome.storage.local.get(['prompt_history'], (res) => {
-                    let h = res.prompt_history || [];
-                    h.splice(index, 1);
-                    chrome.storage.local.set({ prompt_history: h }, () => {
-                        renderHistory(h);
-                        updateLog("Đã xóa 1 mục lịch sử.");
-                    });
-                });
-            });
+            }
 
             historyContainer.appendChild(el);
         });
 
-        // Re-render icons for dynamic content
-        if (typeof lucide !== 'undefined') {
-            lucide.createIcons();
-        }
+        // Re-init icons
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
+
+
+
 
     // Clear All History logic
     const btnClearHistory = document.getElementById('btn-clear-history');
     if (btnClearHistory) {
         btnClearHistory.addEventListener('click', () => {
             if (confirm("Bạn có tin chắc muốn xóa toàn bộ lịch sử không?")) {
-                chrome.storage.local.set({ prompt_history: [] }, () => {
-                    renderHistory([]);
+                StorageService.clearAllWorks().then(() => {
+                    loadHistory();
                     updateLog("Đã dọn sạch lịch sử!");
                 });
             }
@@ -1522,28 +1961,73 @@ document.addEventListener('DOMContentLoaded', () => {
         currentAssistants.forEach(assistant => {
             const card = document.createElement('div');
             card.className = `assistant-card ${assistant.id === activeAssistantId ? 'active' : ''}`;
+
+            // Check if avatar is a URL/Image
+            const isImageUrl = assistant.avatar && (assistant.avatar.startsWith('http') || assistant.avatar.startsWith('data:image'));
+            const avatarHtml = isImageUrl
+                ? `<img src="${assistant.avatar}" class="avatar-img" />`
+                : (assistant.avatar || '🤖');
+
             card.innerHTML = `
-                <button class="card-settings-btn" title="Chỉnh sửa">⚙️</button>
-                <span class="card-avatar">${assistant.avatar || '🤖'}</span>
-                <span class="card-name">${assistant.name}</span>
-                <span class="card-role">${assistant.role || 'Trợ lý'}</span>
-                <div class="card-status"><i></i> Online</div>
+                <div class="card-cover" style="${isImageUrl ? `background-image: url(${assistant.avatar})` : ''}"></div>
+                <div class="card-badge">PRO</div>
+                <button class="card-settings-btn" title="Chỉnh sửa">
+                    <i data-lucide="settings"></i>
+                </button>
+                <div class="card-profile-header">
+                    <div class="card-avatar-container">
+                        <div class="card-avatar">${avatarHtml}</div>
+                        <div class="status-dot"></div>
+                    </div>
+                </div>
+                <div class="card-details">
+                    <span class="card-name">${assistant.name}</span>
+                    <span class="card-role">${assistant.role || 'Co-Producer'}</span>
+                </div>
+                <div class="card-footer">
+                    <span>Active Now</span>
+                    <i data-lucide="arrow-right"></i>
+                </div>
             `;
 
             // Setup Edit button inside card
-            card.querySelector('.card-settings-btn').onclick = (e) => {
-                e.stopPropagation();
-                openAssistantEditor(assistant.id);
-            };
+            const settingsBtn = card.querySelector('.card-settings-btn');
+            if (settingsBtn) {
+                settingsBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openAssistantEditor(assistant.id);
+                };
+            }
 
             // Setup card click to Open Chat on Suno
             card.onclick = () => activateAssistantOnSuno(assistant);
 
             assistantsGrid.appendChild(card);
         });
+
+        // Re-render Lucide icons for the newly added card elements
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
     }
 
     async function activateAssistantOnSuno(assistant) {
+        // Toggle logic: If same assistant is clicked again, deactivate it
+        if (activeAssistantId === assistant.id) {
+            activeAssistantId = null;
+            renderAssistantList();
+
+            // Notify Suno Page to close chat
+            chrome.tabs.query({ url: "*://suno.com/*" }, (tabs) => {
+                tabs.forEach(tab => {
+                    chrome.tabs.sendMessage(tab.id, { action: "CLOSE_ASSISTANT_CHAT" });
+                });
+            });
+
+            updateLog("Đã tắt trợ lý.");
+            return;
+        }
+
         activeAssistantId = assistant.id;
         renderAssistantList();
 
@@ -1567,8 +2051,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateLog("Không thể kết nối với trang Suno. Thử tải lại trang.");
                 } else {
                     updateLog(`Đã kích hoạt ${assistant.name} trên trang Suno!`);
-                    // Optionally close popup after activation to let user focus on Suno
-                    // window.close(); 
                 }
             });
         });
@@ -1583,15 +2065,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const emotions = Array.from(document.querySelectorAll('#emotion-chips .pro-chip.active')).map(c => c.dataset.val);
 
         return `
-[CONTEXT DỮ LIỆU ÂM NHẠC HIỆN TẠI]:
-- Ý tưởng/Lời: ${concept.substring(0, 500)}
-- Nghệ sĩ truyền cảm hứng: ${artist || 'N/A'}
-- Phong cách chủ đạo: ${vibe}
-- Nhạc cụ đã chọn: ${instrumentation.join(', ') || 'Auto'}
-- Kỹ thuật Mix: ${engineering.join(', ') || 'Standard'}
-- Cảm xúc: ${emotions.join(', ') || 'Balanced'}
-- Chế độ: ${inputModeToggle.checked ? 'Lyrics Mode' : 'Concept Mode'}
-        `.trim();
+            [CONTEXT DỮ LIỆU ÂM NHẠC HIỆN TẠI]:
+            - Ý tưởng / Lời: ${concept.substring(0, 500)}
+            - Nghệ sĩ truyền cảm hứng: ${artist || 'N/A'}
+            - Phong cách chủ đạo: ${vibe}
+            - Nhạc cụ đã chọn: ${instrumentation.join(', ') || 'Auto'}
+            - Kỹ thuật Mix: ${engineering.join(', ') || 'Standard'}
+            - Cảm xúc: ${emotions.join(', ') || 'Balanced'}
+            - Chế độ: ${inputModeToggle.checked ? 'Lyrics Mode' : 'Concept Mode'}
+            `.trim();
     }
 
     function saveAssistants() {
@@ -1605,7 +2087,11 @@ document.addEventListener('DOMContentLoaded', () => {
             editAssistantName.value = '';
             editAssistantPrompt.value = '';
             editAssistantKey.value = '';
+            editAssistantAvatar.value = '';
             editAssistantModel.value = 'gemini-2.0-flash';
+            editAssistantVibe.value = 'professional';
+            editAssistantTemperature.value = '0.7';
+            editAssistantKnowledge.value = '';
             btnDeleteAssistant.style.display = 'none';
             assistantEditorModal.style.display = 'flex';
         };
@@ -1618,13 +2104,101 @@ document.addEventListener('DOMContentLoaded', () => {
         editAssistantName.value = assistant.name;
         editAssistantPrompt.value = assistant.prompt;
         editAssistantKey.value = assistant.apiKey || '';
+        editAssistantAvatar.value = assistant.avatar || '';
         editAssistantModel.value = assistant.model || 'gemini-2.0-flash';
+        editAssistantVibe.value = assistant.vibe || 'professional';
+        editAssistantTemperature.value = assistant.temperature || '0.7';
+        editAssistantKnowledge.value = assistant.knowledgeBase || '';
         btnDeleteAssistant.style.display = 'block';
         assistantEditorModal.style.display = 'flex';
+
+        // Auto sync models if we have an API key
+        if (assistant.apiKey || editAssistantKey.value) {
+            syncAvailableModels(assistant.apiKey || editAssistantKey.value);
+        }
+    }
+
+    async function syncAvailableModels(apiKey) {
+        if (!apiKey) return;
+
+        btnSyncModels.classList.add('spinning');
+        syncStatus.innerText = 'Đang đồng bộ model...';
+        syncStatus.className = 'sync-status loading';
+
+        chrome.runtime.sendMessage({ action: "FETCH_MODELS", apiKey: apiKey }, (res) => {
+            btnSyncModels.classList.remove('spinning');
+
+            if (res && res.success) {
+                const models = res.data;
+                const currentValue = editAssistantModel.value;
+
+                // Keep the current options if not already in the list
+                const baseOptions = Array.from(editAssistantModel.options).map(o => o.value);
+
+                editAssistantModel.innerHTML = '';
+
+                // Add new models
+                models.forEach(modelId => {
+                    const opt = document.createElement('option');
+                    opt.value = modelId;
+                    opt.innerText = modelId;
+                    editAssistantModel.appendChild(opt);
+                });
+
+                // Restore previous selection if exists
+                if (models.includes(currentValue)) {
+                    editAssistantModel.value = currentValue;
+                }
+
+                syncStatus.innerText = 'Đã đồng bộ thành công!';
+                syncStatus.className = 'sync-status success';
+                setTimeout(() => { if (syncStatus.className === 'sync-status success') syncStatus.innerText = ''; }, 3000);
+            } else {
+                syncStatus.innerText = 'Lỗi đồng bộ. Kiểm tra API Key.';
+                syncStatus.className = 'sync-status error';
+            }
+        });
+    }
+
+    if (btnSyncModels) {
+        btnSyncModels.onclick = () => {
+            const key = editAssistantKey.value.trim();
+            if (!key) {
+                syncStatus.innerText = 'Vui lòng nhập API Key để đồng bộ.';
+                syncStatus.className = 'sync-status error';
+                return;
+            }
+            syncAvailableModels(key);
+        };
     }
 
     if (closeAssistantEditor) {
         closeAssistantEditor.onclick = () => assistantEditorModal.style.display = 'none';
+    }
+
+    // Avatar Upload Logic
+    if (btnUploadAvatar && avatarFileInput) {
+        btnUploadAvatar.onclick = (e) => {
+            e.preventDefault();
+            avatarFileInput.click();
+        };
+
+        avatarFileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                updateLog("Lỗi: Ảnh tối đa 2MB.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                editAssistantAvatar.value = event.target.result;
+                updateLog("Đã tải ảnh avatar lên!");
+            };
+            reader.readAsDataURL(file);
+        };
     }
 
     if (btnSaveAssistant) {
@@ -1639,8 +2213,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (idx !== -1) {
                     currentAssistants[idx].name = name;
                     currentAssistants[idx].prompt = prompt;
+                    currentAssistants[idx].avatar = editAssistantAvatar.value.trim();
                     currentAssistants[idx].apiKey = editAssistantKey.value.trim();
                     currentAssistants[idx].model = editAssistantModel.value;
+                    currentAssistants[idx].vibe = editAssistantVibe.value;
+                    currentAssistants[idx].temperature = editAssistantTemperature.value;
+                    currentAssistants[idx].knowledgeBase = editAssistantKnowledge.value.trim();
                 }
             } else {
                 // Create
@@ -1649,9 +2227,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     name: name,
                     prompt: prompt,
                     role: 'Custom Assistant',
-                    avatar: '🤖',
+                    avatar: editAssistantAvatar.value.trim(),
                     model: editAssistantModel.value,
                     apiKey: editAssistantKey.value.trim(),
+                    vibe: editAssistantVibe.value,
+                    temperature: editAssistantTemperature.value,
+                    knowledgeBase: editAssistantKnowledge.value.trim(),
                     messages: []
                 };
                 currentAssistants.push(newAssistant);
@@ -1673,33 +2254,58 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // --- LYRICS PROMPT RESIZE LOGIC ---
+    const setupDraggable = (bar, textarea) => {
+        if (!bar || !textarea) return;
+        let isResizing = false;
+        let startY;
+        let startHeight;
+
+        bar.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startY = e.clientY;
+            startHeight = textarea.offsetHeight;
+            document.documentElement.style.cursor = 'ns-resize';
+            bar.classList.add('resizing');
+            e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const dy = e.clientY - startY;
+            textarea.style.height = (startHeight + dy) + 'px';
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!isResizing) return;
+            isResizing = false;
+            document.documentElement.style.cursor = '';
+            bar.classList.remove('resizing');
+        });
+    };
+
+    const lyricsPromptContainer = document.querySelector('.lyrics-prompt-container');
+    const lyricsLabel = lyricsPromptContainer ? lyricsPromptContainer.querySelector('.lyrics-label') : null;
+
+    // Specifically target by ID for stability
+    const promptTextarea = document.getElementById('edit-assistant-prompt');
+    const knowledgeTextarea = document.getElementById('edit-assistant-knowledge');
+
+    // Find bottom bars relative to their containers
+    const promptContainer = promptTextarea ? promptTextarea.closest('.lyrics-prompt-container') : null;
+    const knowledgeContainer = knowledgeTextarea ? knowledgeTextarea.closest('.lyrics-prompt-container') : null;
+
+    if (promptContainer && promptTextarea) {
+        setupDraggable(promptContainer.querySelector('.lyrics-bottom-bar'), promptTextarea);
+    }
+    if (knowledgeContainer && knowledgeTextarea) {
+        setupDraggable(knowledgeContainer.querySelector('.lyrics-bottom-bar'), knowledgeTextarea);
+    }
+
     // Initialize Assistant Tab
     loadAssistants();
 
-    // Helper function to escape HTML
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // NEW: Simple Markdown/Lyrics Renderer
-    function renderMarkdown(text) {
-        if (!text) return '';
-        let html = escapeHtml(text);
-
-        // Bold: **text**
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-
-        // Italic: *text* (optional)
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-
-        // New lines: replace with <br>
-        html = html.replace(/\n/g, '<br>');
-
-        return html;
-    }
+    // Note: escapeHtml and renderMarkdown are imported from utils.js at the top of the file
 
     // Initialize Lucide icons
     if (typeof lucide !== 'undefined') {

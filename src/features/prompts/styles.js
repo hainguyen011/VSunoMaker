@@ -62,11 +62,14 @@ export const stylePrompts = {
     - Âm hưởng vùng miền: "${region || 'Mặc định'}"
 
     YÊU CẦU VỀ STYLE TAGS:
-    1. Phải bao gồm: [Sub-genre], [BPM], [Key], [Main Instruments], [Atmosphere], [Production Style].
+    1. Phải bao gồm: [Sub-genre], [BPM], [Key], [Main Instruments], [Vocal Character - Detailed], [Vocal Gender], [Atmosphere], [Production Style].
     2. Các thẻ tag phải bằng tiếng Anh.
-    3. Nếu nghệ sĩ được nhắc đến, hãy trích xuất đặc trưng âm nhạc của họ (VD: "Sơn Tùng M-TP" -> "Modern V-Pop, Melodic Rap, Synth-heavy").
-    4. QUY TẮC NGHIÊM NGẶT: Chỉ trả về duy nhất chuỗi thẻ tag, cách nhau bởi dấu phẩy. KHÔNG ĐƯỢC bao gồm tên nghệ sĩ "${artist || ''}" trong chuỗi kết quả.
-    5. Không giải thích gì thêm.
+    3. MÔ PHỎNG NGHỆ SĨ (ARTIST ADN): Hãy trích xuất đặc trưng âm nhạc của "${artist || 'Không có'}" (Âm sắc, cách flow, năng lượng).
+       - Ví dụ: "Sơn Tùng M-TP" -> "Melodic V-Pop, Breathiness, High-pitched ad-libs, Modern Synth-pop".
+       - Nếu có nhiều nghệ sĩ: Tạo Style lai (Fusion) độc đáo phản ánh sự phối hợp của họ.
+    4. XÁC ĐỊNH GIỚI TÍNH: Nếu giới tính là "Ngẫu nhiên", hãy tự suy luận dựa trên nghệ sĩ.
+    5. QUY TẮC NGHIÊM NGẶT: Chỉ trả về duy nhất chuỗi thẻ tag, cách nhau bởi dấu phẩy. KHÔNG ĐƯỢC bao gồm tên nghệ sĩ trong chuỗi kết quả.
+    6. Không giải thích gì thêm.
     
     Ví dụ: Modern V-Pop, 105 BPM, G Major, Clean Electric Guitar, Atmospheric Pads, Emotional Male Vocals, High-end Reverb.
         `;
@@ -108,9 +111,9 @@ export const stylePrompts = {
        - Đề xuất các hiệu ứng Studio: Reverb, Delay, Autotune, Lo-fi filter, v.v.
 
     ĐẦU RA (STYLE TAGS - CHỈ TIẾNG ANH):
-    - Cấu trúc: [Genre/Sub-genre], [BPM], [Key], [Instruments], [Vocal Style], [Atmosphere], [Production Effects].
+    - Cấu trúc: [Genre/Sub-genre], [BPM], [Key], [Instruments], [Detailed Vocal Character], [Vocal Gender], [Atmosphere], [Production Effects].
     - QUY TẮC: Chỉ trả về duy nhất chuỗi Tag, phân tách bằng dấu phẩy. KHÔNG chứa tên nghệ sĩ "${artist || ''}".
-    - Ví dụ: Ethereal V-Pop, 85 BPM, Eb Major, Lush Synths, Delicate Đàn Tranh, Breathiness, Shimmer Reverb, Lo-fi Aesthetics.
+    - ĐẶC BIỆT: Nếu có nhiều nghệ sĩ phối hợp, Style phải phản ánh được sự hòa quyện của các dòng nhạc/phong cách của họ.
         `;
     }
 };

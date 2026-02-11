@@ -18,11 +18,20 @@ export const musicPrompts = {
             focusContext = `\n  - TRỌNG TÂM SÁNG TÁC: Phối hợp linh hoạt (Fusion). Hãy tìm điểm giao thoa tốt nhất giữa lời và nhạc để cả hai nâng đỡ nhau hoàn hảo nhất.`;
         }
 
-        const artistContext = artist ? `\n    Đặc biệt, hãy nghiên cứu sâu và mô phỏng "ADN âm nhạc" của nghệ sĩ: "${artist}". 
-        - PHÂN TÍCH VÀ MÔ PHỎNG PHONG CÁCH: Hãy trích xuất cách hát (Vocal Style), cách luyến láy, ngân rung, và cấu trúc câu chữ đặc trưng của họ.
-        - QUY TẮC BẢO MẬT & BẢN QUYỀN: Tuyệt đối KHÔNG ĐƯỢC nhắc lại tên nghệ sĩ "${artist}" trong các trường "style", "title" hoặc "lyrics" của JSON đầu ra. Hãy chuyển hóa tên nghệ sĩ thành các thẻ tag nhạc lý tương đương.` : "";
+        const artistContext = artist ? `
+    ### PHÂN TÍCH VÀ MÔ PHỎNG ADN NGHỆ SĨ (ARTIST SIMULATION):
+    Người dùng muốn lấy cảm hứng từ (các) nghệ sĩ: "${artist}".
+    Nhiệm vụ của bạn là "giải mã" và tái tạo các đặc trưng âm nhạc độc bản của họ mà không vi phạm bản quyền:
+    - PHÂN RÃ CHẤT GIỌNG (VOCAL TIMBRE): Phân tích và mô phỏng độ dày, âm sắc (biến đổi từ khàn, ấm đến sáng, cao), energy level và "vibe" đặc trưng trong giọng hát.
+    - KỸ THUẬT PHRASING & FLOW: Mô phỏng cách ngắt nhịp, luyến láy (vibrato), đổi tông (pitch slides), và cách nhả chữ đặc thù của từng người.
+    - ĐA NGHỆ SĨ (COLLABORATION): Nếu có nhiều nghệ sĩ, hãy tạo ra một sự phối hợp (Fusion) logic: 
+        * Ví dụ: Kết hợp sự gai góc trong Rap của nghệ sĩ A với sự mượt mà trong Vocal của nghệ sĩ B.
+        * Phân bổ vai trò phù hợp trong cấu trúc bài hát (Verse 1 nghệ sĩ A, Chorus nghệ sĩ B, etc.).
+    - QUY TẮC BẢO MẬT: Tuyệt đối KHÔNG nhắc tên "${artist}" trong bất kỳ kết quả JSON nào (Style, Title, Lyrics). Hãy chuyển hóa thành các mô tả kỹ thuật âm nhạc tương đương.` : "";
 
-        const genderContext = gender && gender !== 'Random' ? `\n    - Giới tính giọng hát (Vocal Gender): BẮT BUỘC phải là "${gender}".` : "";
+        const genderContext = (gender && gender !== 'Random')
+            ? `\n    - Giới tính giọng hát (Vocal Gender): BẮT BUỘC phải là "${gender}".`
+            : (artist ? `\n    - Giới tính giọng hát (Vocal Gender): VÌ NGƯỜI DÙNG CHỌN "NGẪU NHIÊN", hãy tự động xác định giới tính dựa trên (các) nghệ sĩ "${artist}" (Nam, Nữ, hoặc Song ca Nam-Nữ nếu có cả hai).` : "");
 
         let regionDetailedContext = "";
         if (language === 'Vietnamese' && region && region !== 'Standard') {
@@ -286,5 +295,105 @@ export const musicPrompts = {
 
     Hãy sáng tạo một kiệt tác có khả năng gây nghiện (Viral) và chạm đến cảm xúc người nghe.
         `;
+    },
+
+    /**
+     * Analyze Artist DNA for Review (SIMPLIFIED VERSION)
+     */
+    analyzeArtistDNA: (artist) => {
+        return `
+    Phân tích ADN âm nhạc của: "${artist}"
+    
+    BƯỚC 1: Xác định số lượng nghệ sĩ
+    - Nếu có DẤU PHẨY hoặc "và" → NHIỀU nghệ sĩ → set "is_collaboration": true
+    - Nếu chỉ 1 tên → ĐƠN nghệ sĩ → set "is_collaboration": false
+    
+    BƯỚC 2: Trả về JSON theo cấu trúc phù hợp
+    
+    === CẤU TRÚC CHO NHIỀU NGHỆ SĨ (is_collaboration: true) ===
+    {
+      "is_collaboration": true,
+      "artists": [
+        {
+          "name": "Tên nghệ sĩ 1",
+          "vocal": {
+            "gender": "Nam/Nữ/Song ca",
+            "timbre": "Mô tả âm sắc (8-12 từ)",
+            "traits": ["Tag1", "Tag2", "Tag3"],
+            "techniques": ["Kỹ thuật đặc trưng 1", "Kỹ thuật 2"]
+          },
+          "lyrics": {
+            "style": "Phong cách viết lời (10-15 từ)",
+            "themes": ["Chủ đề 1", "Chủ đề 2"],
+            "emotional_spectrum": ["Cảm xúc chủ đạo 1", "Cảm xúc 2"]
+          },
+          "musicality": {
+            "genres": ["Genre1", "Genre2"],
+            "instruments": ["Nhạc cụ 1", "Nhạc cụ 2"],
+            "bpm_range": "VD: 100-120 BPM",
+            "signature_sound": "Âm thanh dễ nhận biết (10-15 từ)"
+          },
+          "overall_vibe": "Tổng quan phong cách nghệ sĩ (15-20 từ)"
+        },
+        {
+          "name": "Tên nghệ sĩ 2",
+          "vocal": { /* cấu trúc giống trên */ },
+          "lyrics": { /* cấu trúc giống trên */ },
+          "musicality": { /* cấu trúc giống trên */ },
+          "overall_vibe": "..."
+        }
+      ],
+      "collaboration": {
+        "fusion_style": "Mô tả phong cách kết hợp (15-20 từ)",
+        "complementary_traits": [
+          "Nghệ sĩ 1: Điểm mạnh - Nghệ sĩ 2: Điểm mạnh bổ sung",
+          "Trait pair 2"
+        ],
+        "signature_tracks_vibe": "Vibe đặc trưng khi kết hợp (12-15 từ)",
+        "recommended_roles": {
+          "Tên nghệ sĩ 1": "Vai trò đề xuất (VD: Verse nhanh - Hook)",
+          "Tên nghệ sĩ 2": "Vai trò đề xuất"
+        }
+      }
+    }
+    
+    === CẤU TRÚC CHO ĐƠN NGHỆ SĨ (is_collaboration: false) ===
+    {
+      "is_collaboration": false,
+      "vocal": {
+        "gender": "Nam/Nữ/Song ca",
+        "timbre": "Mô tả âm sắc (8-12 từ)",
+        "traits": ["Tag1", "Tag2", "Tag3"],
+        "techniques": ["Kỹ thuật đặc trưng 1", "Kỹ thuật 2"]
+      },
+      "lyrics": {
+        "style": "Phong cách viết lời (10-15 từ)",
+        "themes": ["Chủ đề 1", "Chủ đề 2"],
+        "emotional_spectrum": ["Cảm xúc chủ đạo 1", "Cảm xúc 2"]
+      },
+      "musicality": {
+        "genres": ["Genre1", "Genre2"],
+        "instruments": ["Nhạc cụ 1", "Nhạc cụ 2"],
+        "bpm_range": "VD: 110-130 BPM",
+        "signature_sound": "Âm thanh dễ nhận biết (10-15 từ)"
+      },
+      "overall_vibe": "Tổng quan phong cách nghệ sĩ (15-20 từ)",
+      "collaboration": null
+    }
+
+    QUY TẮC JSON NGHIÊM NGẶT:
+    - CHỈ trả về JSON thuần túy - TUYỆT ĐỐI KHÔNG có markdown hoặc code block
+    - TRONG TEXT FIELDS: SỬ DỤNG DẤU GẠCH NGANG (-) HOẶC TỪ NỐI (và/hoặc) THAY VÌ DẤU PHẨY
+    - TUYỆT ĐỐI KHÔNG dùng dấu phẩy (,) trong nội dung text
+    - Chỉ dùng dấu phẩy để phân cách các phần tử JSON
+    - Nếu KHÔNG phải nhiều nghệ sĩ: collaboration = null
+    - Dùng dấu nháy đơn nếu cần nhấn mạnh từ ngữ trong text
+    
+    VÍ DỤ TECHNIQUES: ["Rap nhanh", "Melisma", "Ad-libs", "Falset to", "Vibrato"]
+    VÍ DỤ EMOTIONAL_SPECTRUM: ["Buồn và hoài niệm", "Vui vẻ năng động", "Sâu sắc trầm tư"]
+    VÍ DỤ BPM_RANGE: "90-110 BPM" hoặc "120-140 BPM"
+    VÍ DỤ SIGNATURE_SOUND: "Bass mạnh với synth overlay sáng" hoặc "Acoustic guitar nhẹ nhàng với string section"
+        `;
     }
 };
+

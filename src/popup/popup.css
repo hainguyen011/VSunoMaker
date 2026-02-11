@@ -132,70 +132,167 @@ main {
 }
 
 @keyframes pulse {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
-    50% {
-        transform: scale(1.4);
-        opacity: 0.6;
-    }
+.model-select-wrapper {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
 
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+.model-select-wrapper select {
+    flex: 1;
+}
+
+.sync-status {
+    font-size: 0.65rem;
+    margin-top: 4px;
+    padding-left: 4px;
+    height: 14px;
+    transition: all 0.2s;
+}
+
+.sync-status.loading { color: #888; }
+.sync-status.success { color: #4cd137; }
+.sync-status.error { color: #fa5656; }
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinning {
+    animation: spin 1s linear infinite;
+}
+
+.settings-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.input-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 4px;
 }
 
 .input-panel label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: var(--text-dim);
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: #888;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    padding-left: 4px;
 }
 
+
+/* --- LYRICS STYLE PROMPT BOX --- */
+.lyrics-prompt-container {
+    background: #0a0a0b;
+    border-radius: 20px;
+    padding: 12px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    /* Remove overflow: hidden to allow resize handle to work and container to grow */
+    display: block; 
+}
+
+.lyrics-label {
+    background: #1a1a1b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: white;
+    letter-spacing: 0.5px;
+    display: inline-block;
+    width: fit-content;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.lyrics-prompt-container textarea {
+    display: block;
+    width: 100%;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px 12px !important;
+    min-height: 120px !important;
+    font-size: 0.95rem !important;
+    color: #eee !important;
+    line-height: 1.6 !important;
+    resize: none !important; /* Hide native handle, we use our custom one */
+    margin-bottom: 4px;
+}
+
+.lyrics-bottom-bar {
+    width: 60px;
+    height: 4px; /* Slightly thicker for better hit target */
+    background: #252526;
+    border-radius: 4px;
+    margin: 8px auto 0;
+    opacity: 0.5;
+    cursor: ns-resize; /* North-South resize cursor */
+    transition: all 0.2s;
+    position: relative;
+    z-index: 10;
+}
+
+.lyrics-bottom-bar:hover,
+.lyrics-bottom-bar.resizing {
+    opacity: 1;
+    background: #fa5656;
+    width: 80px;
+}
 
 textarea,
 input[type="password"],
 input[type="text"],
 select {
     width: 100%;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--element-radius) !important;
-    padding: 8px 12px;
+    background: #1a1a1b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
     color: white;
-    font-family: inherit;
+    padding: 10px 14px;
     font-size: 0.85rem;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
-}
-
-/* Fix for dropdown options on Windows */
-option {
-    background-color: #1e1e1e;
-    /* Hardcoded dark color often works better for options than var */
-    color: white;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
 textarea:focus,
-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.1);
+input[type="password"]:focus,
+input[type="text"]:focus,
+select:focus {
+    outline: none;
+    border-color: #fa5656;
+    background: #212122;
+    box-shadow: 0 0 12px rgba(250, 86, 86, 0.1);
 }
 
 textarea {
-    height: 90px;
     min-height: 90px;
-    resize: vertical;
-    margin-bottom: 16px;
-    padding: 12px;
     resize: none;
-    /* Disable native resize */
+    line-height: 1.5;
+}
+
+select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
 }
 
 /* Custom Resize Handle */
@@ -292,9 +389,6 @@ textarea {
     background: #ff6060;
 }
 
-.glow-button:active {
-    transform: translateY(1px);
-}
 
 .glow-button:disabled {
     background: #333;
@@ -688,7 +782,7 @@ footer {
     background: rgba(250, 86, 86, 0.15);
     color: var(--accent);
     border-color: rgba(250, 86, 86, 0.3);
-    transform: scale(1.05);
+
 }
 
 .history-tag {
@@ -740,7 +834,7 @@ footer {
     background: rgba(239, 68, 68, 0.15);
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.3);
-    transform: scale(1.05);
+
 }
 
 .history-concept {
@@ -1225,7 +1319,6 @@ footer {
 
 .remove-img-btn:hover {
     background: var(--primary);
-    transform: scale(1.1);
 }
 
 /* --- RESULT BOX (Clone Vibe) --- */
@@ -1609,34 +1702,35 @@ footer {
 }
 
 .modal-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
+    background: #0f0f10;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
     width: 100%;
-    max-width: 400px;
+    max-width: 380px;
     max-height: 90vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
 }
 
 .modal-header {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .modal-title {
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: #fa5656;
     display: flex;
     align-items: center;
     gap: 8px;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
 }
 
 .modal-title svg {
@@ -1644,19 +1738,34 @@ footer {
     height: 16px;
 }
 
-.modal-close {
-    background: transparent;
+.close-modal {
+    background: rgba(255, 255, 255, 0.05);
     border: none;
-    color: var(--text-dim);
-    font-size: 24px;
+    color: #888;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
     cursor: pointer;
     line-height: 1;
+    transition: all 0.2s;
+}
+
+.close-modal:hover {
+    background: rgba(250, 86, 86, 0.1);
+    color: #fa5656;
 }
 
 .modal-body {
     flex: 1;
     overflow-y: auto;
-    padding: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .review-intro {
@@ -1766,11 +1875,50 @@ footer {
 }
 
 .modal-footer {
-    padding: 16px;
-    border-top: 1px solid var(--border);
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
+}
+
+#btn-save-assistant {
+    background: #fa5656;
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+    font-family: 'Inter', sans-serif;
+}
+
+#btn-save-assistant:hover {
+    background: #ff6b6b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(250, 86, 86, 0.3);
+}
+
+#btn-delete-assistant {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #888;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#btn-delete-assistant:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border-color: #fa5656;
 }
 
 .ghost-btn {
@@ -2537,10 +2685,6 @@ footer {
     padding: 10px 4px;
 }
 
-.lobby-header {
-    margin-bottom: 24px;
-    text-align: center;
-}
 
 .lobby-title {
     font-size: 1.1rem;
@@ -2570,7 +2714,6 @@ footer {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid var(--border);
     border-radius: 20px;
-    padding: 20px 15px;
     text-align: center;
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -2585,21 +2728,12 @@ footer {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at center, rgba(250, 86, 86, 0.1), transparent);
+ 
     opacity: 0;
     transition: opacity 0.3s;
 }
 
-.assistant-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-    background: rgba(250, 86, 86, 0.05);
-    box-shadow: 0 10px 25px rgba(250, 86, 86, 0.15);
-}
 
-.assistant-card:hover::before {
-    opacity: 1;
-}
 
 .assistant-card.active {
     border-color: var(--accent);
@@ -2608,15 +2742,11 @@ footer {
 
 .card-avatar {
     font-size: 2.2rem;
-    margin-bottom: 12px;
     display: block;
-    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
     transition: transform 0.3s;
 }
 
-.assistant-card:hover .card-avatar {
-    transform: scale(1.15) rotate(5deg);
-}
+
 
 .card-name {
     font-weight: 700;
@@ -2750,4 +2880,705 @@ footer {
         transform: scale(0.95);
         box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
     }
+}
+/* ==================== ARTIST DNA MODAL ENHANCED STYLES ==================== */
+
+/* Artist DNA Grid */
+.dna-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+/* Artist Tabs (for multi-artist) */
+.dna-artist-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dna-artist-tab {
+    flex: 1;
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dna-artist-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.dna-artist-tab.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(250, 86, 86, 0.3);
+}
+
+/* DNA Sections */
+.dna-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+
+.dna-section:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(250, 86, 86, 0.3);
+    transform: translateY(-2px);
+}
+
+.dna-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+}
+
+.dna-section-header i {
+    width: 16px;
+    height: 16px;
+    color: var(--accent);
+}
+
+.dna-description {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.5;
+    margin: 8px 0;
+}
+
+.dna-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.dna-tag {
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.8);
+    transition: all 0.2s;
+}
+
+.dna-tag:hover {
+    background: rgba(250, 86, 86, 0.15);
+    border-color: var(--accent);
+    color: white;
+}
+
+/* Techniques Badges */
+.dna-techniques {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.dna-technique-badge {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, rgba(250, 86, 86, 0.2), rgba(255, 71, 87, 0.1));
+    border: 1px solid rgba(250, 86, 86, 0.4);
+    border-radius: 16px;
+    font-size: 0.7rem;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* BPM Display */
+.dna-bpm-stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(0, 255, 157, 0.1);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #00ff9d;
+    margin-top: 8px;
+}
+
+/* Signature Sound */
+.dna-signature {
+    margin-top: 8px;
+    padding: 10px;
+    background: rgba(138, 99, 210, 0.1);
+    border-left: 3px solid #8a63d2;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-style: italic;
+}
+
+/* Overall Vibe Section */
+.dna-overall-vibe {
+    background: linear-gradient(135deg, rgba(250, 86, 86, 0.15), rgba(138, 99, 210, 0.15));
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.dna-vibe-title {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.dna-vibe-text {
+    font-size: 0.95rem;
+    color: white;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+/* Emotional Spectrum Pills */
+.dna-emotion-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.dna-emotion-pill {
+    padding: 5px 12px;
+    background: rgba(138, 99, 210, 0.15);
+    border: 1px solid rgba(138, 99, 210, 0.3);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #a78bfa;
+    font-weight: 600;
+}
+
+/* Collaboration Insights Section */
+.dna-collaboration-section {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.1));
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+}
+
+.dna-collab-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #ffc107;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 16px;
+}
+
+.dna-collab-item {
+    margin-bottom: 14px;
+}
+
+.dna-collab-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 193, 7, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dna-collab-content {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.6;
+}
+
+.dna-collab-traits {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.dna-collab-trait-item {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 3px solid rgba(255, 193, 7, 0.5);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.dna-role-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.dna-role-item {
+    padding: 10px 14px;
+    background: rgba(250, 86, 86, 0.1);
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    border-radius: 8px;
+}
+
+.dna-role-artist {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.dna-role-desc {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==================== PREMIUM BUTTON STYLES ==================== */
+
+.dna-action-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Ghost Button (Secondary) */
+.ghost-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.ghost-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.ghost-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Premium Glow Button */
+.glow-button.premium {
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+    border: none;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.glow-button.premium:hover {
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+    transform: translateY(-1px);
+}
+
+.glow-button.premium i {
+    animation: pulse-icon 2s infinite;
+}
+
+@keyframes pulse-icon {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+
+/* ==================== AI ASSISTANTS INTERFACE (REFINED SOLID THEME) ==================== */
+
+/* Assistants Lobby Container */
+.assistants-lobby {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Lobby Header */
+.lobby-header {
+    padding: 24px 20px;
+ 
+    border-radius: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.lobby-title {
+    font-size: 1rem;
+    font-weight: 900;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    background: linear-gradient(90deg, #fa5656, #8a63d2, #fa5656);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: title-shine 4s linear infinite;
+}
+
+@keyframes title-shine {
+    to { background-position: 200% center; }
+}
+
+.lobby-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
+/* Assistants Grid */
+.assistants-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    padding: 2px;
+}
+
+/* Individual Assistant Card */
+.assistant-card {
+    position: relative;
+    background: #1a1a1b;
+    border: 1px solid #2a2a2b;
+    border-radius: 28px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Social Cover Area */
+.card-cover {
+    width: 100%;
+    height: 85px;
+    background-size: cover;
+    background-position: center;
+    background-color: #1a1a1b;
+    position: relative;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    /* Enhanced Blur & Blend */
+    filter: blur(8px) brightness(0.65) saturate(1.2);
+    transform: scale(1.1); /* Prevent blurred edges from leaking */
+    
+    /* Smoother transition/mixing */
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0.4) 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0.4) 85%, transparent 100%);
+    
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Profile Header (Avatar overlap area) */
+.card-profile-header {
+    width: 100%;
+    padding: 0 18px;
+    margin-top: -32px; /* Pulls the avatar over the cover */
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start; /* Avatar on the left side like FB */
+    z-index: 5;
+    pointer-events: none; /* Let clicks pass to card except for buttons inside */
+}
+
+.card-profile-header > * {
+    pointer-events: auto;
+}
+
+/* Card Content Z-Index Elevation */
+.card-settings-btn,
+.card-badge,
+.card-avatar-container,
+.card-details,
+.card-footer {
+    position: relative;
+    z-index: 1;
+}
+
+/* Card Elements Decor */
+.card-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 2px 8px;
+    background: rgba(42, 42, 43, 0.85);
+    border: 1px solid rgba(250, 86, 86, 0.3);
+    border-radius: 6px;
+    font-size: 0.5rem;
+    font-weight: 800;
+    color: #fa5656;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(4px);
+    z-index: 10;
+}
+
+/* Settings Button (Top Right) */
+.card-settings-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    background: rgba(42, 42, 43, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #bbb;
+    transition: all 0.2s ease;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+}
+
+.card-settings-btn:hover {
+    background: #444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.card-settings-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Avatar Container (The Circle) */
+.card-avatar-container {
+    position: relative;
+    padding: 2px;
+    background: #1a1a1b;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+}
+
+.card-avatar {
+    width: 62px;
+    height: 62px;
+    background: #252526;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 2rem;
+    line-height: 1;
+    border: 1px solid rgba(255,255,255,0.08);
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Status Dot on Avatar */
+.status-dot {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+    background: #00ff00;
+    border: 3px solid #1a1a1b;
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(0, 255, 0, 0.4);
+    z-index: 5;
+}
+
+/* Removed redundant badge/settings rules here to keep clean */
+
+.card-details {
+    padding: 16px 16px 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.card-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: white;
+}
+
+.card-role {
+    font-size: 0.65rem;
+    color: #888;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-footer {
+    padding: 12px 16px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.65rem;
+    color: #555;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-top: 1px solid rgba(255, 255, 255, 0.02);
+    margin-top: 8px;
+}
+
+.assistant-card:hover {
+    background: #1e1e1f;
+    border-color: #3a3a3b;
+    transform: translateY(-4px);
+}
+
+.assistant-card.active {
+    border: 1px solid #fa5656;
+    background: #1c1c1d;
+    box-shadow: 0 8px 32px rgba(250, 86, 86, 0.1);
+}
+
+.assistant-card.active .card-avatar-container {
+    background: #fa5656;
+    padding: 3px;
+}
+
+.card-footer svg {
+    width: 14px;
+    height: 14px;
+    opacity: 0.3;
+}
+
+/* Add Assistant Button */
+.add-assistant-card {
+    background: transparent;
+    border: 2px dashed #2a2a2b;
+    border-radius: 28px;
+    height: 100%;
+    min-height: 200px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    grid-column: span 2;
+    color: #444;
+}
+
+.add-assistant-card:hover {
+    border-color: #4a4a4b;
+    background: rgba(255, 255, 255, 0.02);
+    color: #666;
+}
+
+.add-assistant-card .plus-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 15px;
+    background: #1a1a1b;
+    border: 1px solid #2a2a2b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.add-assistant-card:hover .plus-icon {
+    background: #2a2a2b;
+    color: white;
+    transform: scale(1.1);
+}
+
+.add-assistant-card span {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 380px) {
+    .assistants-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .add-assistant-card {
+        grid-column: span 1;
+    }
+}
+
+/* Assistant Editor specific bits */
+#btn-upload-avatar {
+    width: 42px;
+    height: 42px;
+    background: #1a1a1b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+#btn-upload-avatar:hover {
+    background: #252526;
+    color: white;
+    border-color: #fa5656;
+}
+
+#btn-upload-avatar svg {
+    width: 18px;
+    height: 18px;
 }
