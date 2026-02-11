@@ -42,6 +42,7 @@
                 "https://suno.com/*"
             ],
             "js": [
+                "src/lib/marked.min.js",
                 "src/content/suno-inject.js"
             ],
             "css": [

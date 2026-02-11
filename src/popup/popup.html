@@ -24,7 +24,7 @@
                 <i data-lucide="music"></i>
             </button>
             <button class="tab-btn" data-tab="assistants" title="Trợ lý AI (Co-Producer)">
-                <i data-lucide="message-square"></i>
+                <i data-lucide="bot-message-square"></i>
             </button>
             <button class="tab-btn" data-tab="studio" title="Studio">
                 <i data-lucide="audio-lines"></i>
@@ -214,20 +214,43 @@
                 <div class="assistants-lobby">
                     <div class="lobby-header">
                         <div class="lobby-title">TRỢ LÝ ÂM NHẠC</div>
-                        <p class="lobby-subtitle">Chọn một nhân cách AI để bắt đầu cộng tác trực tiếp trên trang Suno.
-                        </p>
+
+                        <!-- Sub-tab Bar for Assistants -->
+                        <div class="assistants-sub-tabs">
+                            <button class="assist-sub-btn active" data-sub="individual">CÁ NHÂN</button>
+                            <button class="assist-sub-btn" data-sub="council">
+                                <i data-lucide="users" style="width: 12px; height: 12px; margin-right: 4px;"></i>
+                                HỘI ĐỒNG
+                            </button>
+                        </div>
                     </div>
 
-                    <div id="assistants-grid" class="assistants-grid">
-                        <!-- Assistant Cards will be injected here -->
+                    <!-- SUB-CONTENT: INDIVIDUAL -->
+                    <div id="sub-assist-individual" class="sub-assist-content active">
+                        <div id="assistants-grid" class="assistants-grid">
+                            <!-- Assistant Cards will be injected here -->
+                        </div>
+                        <button id="btn-add-assistant-pro" class="add-assistant-card">
+                            <div class="plus-icon">+</div>
+                            <span>Thêm Trợ lý Mới</span>
+                        </button>
                     </div>
 
-                    <button id="btn-add-assistant-pro" class="add-assistant-card">
-                        <div class="plus-icon">+</div>
-                        <span>Thêm Trợ lý Mới</span>
-                    </button>
+                    <!-- SUB-CONTENT: COUNCIL -->
+                    <div id="sub-assist-council" class="sub-assist-content">
+                        <div id="council-list" class="council-list">
+                            <!-- Council Cards will be injected here -->
+                            <div class="empty-state">Chưa có Phòng Hội Đồng nào. Hãy tạo nhóm đầu tiên của bạn!</div>
+                        </div>
+                        <button id="btn-add-council" class="add-assistant-card council-style" style="margin-top: 16px;">
+                            <div class="plus-icon" style="background: linear-gradient(135deg, #4cd137, #44bd32);">+
+                            </div>
+                            <span>Thiết lập Hội đồng Mới</span>
+                        </button>
+                    </div>
                 </div>
 
+                <!-- Modal: Assistant Editor (Existing) -->
                 <!-- Modal: Assistant Editor (Keep this in popup) -->
                 <div id="assistant-editor-modal" class="modal-overlay" style="display: none;">
                     <div class="modal-card">
@@ -265,7 +288,7 @@
                                     style="background: #080a08; border-color: rgba(0, 255, 0, 0.05);">
                                     <div class="lyrics-label" style="color: #4cd137;">CẨM NANG KIẾN THỨC (RULES)</div>
                                     <textarea id="edit-assistant-knowledge"
-                                        placeholder="Các quy tắc, hướng dẫn cho assistance"></textarea>
+                                        placeholder="Các quy tắc, hướng dẫn cho trợ lý"></textarea>
                                     <div class="lyrics-bottom-bar" style="background: #1a2a1a;"></div>
                                 </div>
                             </div>
@@ -313,6 +336,42 @@
                         <div class="modal-footer">
                             <button id="btn-save-assistant" class="glow-button">LƯU CẤU HÌNH</button>
                             <button id="btn-delete-assistant" class="ghost-btn danger">XÓA TRỢ LÝ</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: Council Editor (NEW) -->
+                <div id="council-editor-modal" class="modal-overlay" style="display: none;">
+                    <div class="modal-card">
+                        <div class="modal-header">
+                            <div class="modal-title">THIẾT LẬP HỘI ĐỒNG</div>
+                            <button class="close-modal" id="close-council-editor">×</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="input-panel">
+                                <label>TÊN HỘI ĐỒNG</label>
+                                <input type="text" id="edit-council-name" placeholder="Ví dụ: Ban Giám Khảo Hit-Maker">
+                            </div>
+                            <div class="input-panel">
+                                <label>MÔ TẢ MỤC TIÊU</label>
+                                <textarea id="edit-council-desc"
+                                    placeholder="Nhóm này dùng để làm gì? (VD: Phản biện lời nhạc và hòa âm)"
+                                    style="min-height: 60px;"></textarea>
+                            </div>
+                            <div class="input-panel">
+                                <label>THÀNH VIÊN HỘI ĐỒNG (CHỌN TÀI TRỢ LÝ)</label>
+                                <div id="council-member-selector" class="member-selector-grid">
+                                    <!-- Assistant selection chips will be injected here -->
+                                </div>
+                                <p class="helper-text" style="font-size: 0.65rem; opacity: 0.6; margin-top: 4px;">* Chọn
+                                    ít nhất 2 trợ lý để bắt đầu hội đồng.</p>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="btn-save-council" class="glow-button"
+                                style="background: linear-gradient(135deg, #4cd137, #44bd32);">LƯU HỘI ĐỒNG</button>
+                            <button id="btn-delete-council" class="ghost-btn danger" style="display: none;">GIẢI
+                                TÁN</button>
                         </div>
                     </div>
                 </div>
@@ -763,6 +822,18 @@
                 </div>
             </div>
         </main>
+
+        <!-- Fixed Action Area for Assistants -->
+        <div id="assistants-fixed-actions" class="assist-fixed-zone" style="display: none;">
+            <button id="btn-fix-add-assistant" class="fab-btn individual">
+                <i data-lucide="user-plus"></i>
+                <span>Thêm Trợ lý</span>
+            </button>
+            <button id="btn-fix-add-council" class="fab-btn council" style="display: none;">
+                <i data-lucide="users-round"></i>
+                <span>Lập Hội đồng</span>
+            </button>
+        </div>
 
         <!-- Fixed Global Status Log -->
         <div id="status-log-container" class="log-overlay">

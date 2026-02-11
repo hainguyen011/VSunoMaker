@@ -251,18 +251,31 @@ class AssistantChatWindow {
 
         // Chat Input
         sendBtn.onclick = () => this.sendMessage();
-        input.onkeydown = (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
-        };
+
+        // Stop ALL key events from bubbling to Suno to fix Space issue
+        ['keydown', 'keyup', 'keypress'].forEach(evt => {
+            input.addEventListener(evt, (e) => {
+                e.stopPropagation();
+                if (evt === 'keydown' && e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+        });
 
         // Auto-resize input
         input.oninput = () => {
             input.style.height = 'auto';
             input.style.height = (input.scrollHeight) + 'px';
         };
+
+        // GLOBAL ISOLATION: Stop key events at the container level
+        // This prevents the Shadow Host (div) from bubbling events to document/window
+        ['keydown', 'keyup', 'keypress'].forEach(evt => {
+            this.container.addEventListener(evt, (e) => {
+                e.stopPropagation();
+            });
+        });
     }
 
     open(assistant, context) {
@@ -273,12 +286,36 @@ class AssistantChatWindow {
         this.shadow.getElementById('shm-name').innerText = assistant.name;
 
         const avatarEl = this.shadow.getElementById('shm-avatar');
-        const isImageUrl = assistant.avatar && (assistant.avatar.startsWith('http') || assistant.avatar.startsWith('data:image'));
 
-        if (isImageUrl) {
-            avatarEl.innerHTML = `<img src="${assistant.avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
+        if (assistant.isCouncil) {
+            avatarEl.classList.add('is-council');
+            // Render Council Avatar Stack
+            const members = assistant.members || [];
+            let stackHtml = '';
+            members.slice(0, 3).forEach((m, idx) => {
+                const av = m.avatar || '🤖';
+                const isImg = av && (av.startsWith('http') || av.startsWith('data:image'));
+                stackHtml += `
+                    <div class="stack-avatar-item" style="left: ${idx * 14}px; z-index: ${3 - idx};">
+                        ${isImg ? `<img src="${av}" />` : `<span>${av}</span>`}
+                    </div>
+                `;
+            });
+            avatarEl.innerHTML = `<div class="stack-wrapper" style="width: ${24 + (Math.min(members.length, 3) - 1) * 14}px;">${stackHtml}</div>`;
+            avatarEl.style.background = 'transparent';
+            avatarEl.style.boxShadow = 'none';
         } else {
-            avatarEl.innerText = assistant.avatar || '🤖';
+            avatarEl.classList.remove('is-council');
+            // Individual Avatar
+            const avatar = assistant.avatar || '🤖';
+            const isImageUrl = avatar && (avatar.startsWith('http') || avatar.startsWith('data:image'));
+            if (isImageUrl) {
+                avatarEl.innerHTML = `<img src="${avatar}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`;
+            } else {
+                avatarEl.innerText = avatar;
+            }
+            avatarEl.style.background = ''; // Reset to CSS default
+            avatarEl.style.boxShadow = '';
         }
 
         this.container.style.display = 'block';
@@ -311,8 +348,21 @@ class AssistantChatWindow {
         this.messages.forEach(msg => {
             const el = document.createElement('div');
             el.className = `shm-msg ${msg.role === 'user' ? 'user' : 'ai'}`;
-            // Convert newlines to <br> for simple formatting
-            el.innerHTML = msg.content.replace(/\n/g, '<br>');
+            // Try to find marked in various scopes
+            let markedLib = (typeof marked !== 'undefined') ? marked : (window.marked || globalThis.marked);
+
+            // Use Markdown Parser
+            if (markedLib && markedLib.parse) {
+                try {
+                    el.innerHTML = markedLib.parse(msg.content);
+                } catch (e) {
+                    console.error('Marked parse error:', e);
+                    el.innerHTML = this.parseMarkdownCustom(msg.content);
+                }
+            } else {
+                // Fallback to custom parser
+                el.innerHTML = this.parseMarkdownCustom(msg.content);
+            }
             msgsEl.appendChild(el);
         });
 
@@ -325,15 +375,23 @@ class AssistantChatWindow {
         const emptyStateEl = msgsEl.querySelector('#shm-empty-state');
         if (emptyStateEl) emptyStateEl.innerText = `${this.activeAssistant.name} đang xem qua bài nhạc của bạn...`;
 
-        chrome.runtime.sendMessage({
-            action: "CHAT_WITH_ASSISTANT",
+        const action = this.activeAssistant.isCouncil ? "CHAT_WITH_COUNCIL" : "CHAT_WITH_ASSISTANT";
+        const messagePayload = {
+            action: action,
             apiKey: this.activeAssistant.apiKey,
             model: this.activeAssistant.model || 'gemini-2.0-flash',
-            systemPrompt: this.activeAssistant.prompt,
             musicContext: this.musicContext,
-            userMessage: "[HÀNH ĐỘNG HỆ THỐNG]: Hãy chào người dùng một cách tự nhiên. Tôi thấy bạn đã nắm bắt được bối cảnh sáng tác hiện tại của tôi (trong biến context). Hãy tóm tắt ngắn gọn những gì bạn thấy và đưa ra một lời khen hoặc gợi ý cải thiện sơ bộ để chúng ta bắt đầu thảo luận nhé.",
+            userMessage: "[HÀNH ĐỘNG HỆ THỐNG]: Hãy chào người dùng ngắn gọn (1 câu thôi) như bạn bè. Đừng tóm tắt context, đừng giới thiệu bản thân. Chỉ cần chào và tỏ ra hứng thú.",
             history: []
-        }, (res) => {
+        };
+
+        if (this.activeAssistant.isCouncil) {
+            messagePayload.council = this.activeAssistant;
+        } else {
+            messagePayload.systemPrompt = this.activeAssistant.prompt;
+        }
+
+        chrome.runtime.sendMessage(messagePayload, (res) => {
             if (res && res.success) {
                 const aiMsg = { role: 'ai', content: res.data };
                 this.messages.push(aiMsg);
@@ -358,18 +416,26 @@ class AssistantChatWindow {
         input.value = '';
         input.style.height = 'auto';
 
-        chrome.runtime.sendMessage({
-            action: "CHAT_WITH_ASSISTANT",
+        const action = this.activeAssistant.isCouncil ? "CHAT_WITH_COUNCIL" : "CHAT_WITH_ASSISTANT";
+        const messagePayload = {
+            action: action,
             apiKey: this.activeAssistant.apiKey,
             model: this.activeAssistant.model || 'gemini-2.0-flash',
-            systemPrompt: this.activeAssistant.prompt,
-            vibe: this.activeAssistant.vibe,
-            temperature: this.activeAssistant.temperature,
-            knowledgeBase: this.activeAssistant.knowledgeBase,
             musicContext: this.musicContext,
             userMessage: text,
             history: this.messages.slice(0, -1)
-        }, (res) => {
+        };
+
+        if (this.activeAssistant.isCouncil) {
+            messagePayload.council = this.activeAssistant;
+        } else {
+            messagePayload.systemPrompt = this.activeAssistant.prompt;
+            messagePayload.vibe = this.activeAssistant.vibe;
+            messagePayload.temperature = this.activeAssistant.temperature;
+            messagePayload.knowledgeBase = this.activeAssistant.knowledgeBase;
+        }
+
+        chrome.runtime.sendMessage(messagePayload, (res) => {
             if (res && res.success) {
                 const aiMsg = { role: 'ai', content: res.data };
                 this.messages.push(aiMsg);
@@ -381,13 +447,15 @@ class AssistantChatWindow {
         });
     }
 
+
     syncToStorage() {
-        chrome.storage.local.get(['music_assistants'], (res) => {
-            const assistants = res.music_assistants || [];
-            const idx = assistants.findIndex(a => a.id === this.activeAssistant.id);
+        const key = this.activeAssistant.isCouncil ? 'ai_councils' : 'music_assistants';
+        chrome.storage.local.get([key], (res) => {
+            const list = res[key] || [];
+            const idx = list.findIndex(a => a.id === this.activeAssistant.id);
             if (idx !== -1) {
-                assistants[idx].messages = this.messages;
-                chrome.storage.local.set({ music_assistants: assistants });
+                list[idx].messages = this.messages;
+                chrome.storage.local.set({ [key]: list });
             }
         });
     }

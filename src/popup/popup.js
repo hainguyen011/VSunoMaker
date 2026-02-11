@@ -60,8 +60,31 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastAudioBase64 = null; // To allow re-suggestion without re-upload
 
     // --- AI ASSISTANTS ELEMENTS (LOBBY) ---
+    let currentAssistants = [];
+    let currentCouncils = [];
+    let activeAssistantId = null;
+    let editingAssistantId = null;
+    let editingCouncilId = null;
+    let selectedCouncilMemberIds = [];
+
+    // Assistants UI Elements
     const assistantsGrid = document.getElementById('assistants-grid');
     const btnAddAssistantPro = document.getElementById('btn-add-assistant-pro');
+
+    // Assistants Sub-Tabs Elements
+    const assistSubBtns = document.querySelectorAll('.assist-sub-btn');
+    const subAssistContents = document.querySelectorAll('.sub-assist-content');
+
+    // Council UI Elements
+    const councilList = document.getElementById('council-list');
+    const btnAddCouncil = document.getElementById('btn-add-council');
+    const councilEditorModal = document.getElementById('council-editor-modal');
+    const closeCouncilEditor = document.getElementById('close-council-editor');
+    const editCouncilName = document.getElementById('edit-council-name');
+    const editCouncilDesc = document.getElementById('edit-council-desc');
+    const councilMemberSelector = document.getElementById('council-member-selector');
+    const btnSaveCouncil = document.getElementById('btn-save-council');
+    const btnDeleteCouncil = document.getElementById('btn-delete-council');
 
     // Assistant Editor Modal
     const assistantEditorModal = document.getElementById('assistant-editor-modal');
@@ -81,10 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSyncModels = document.getElementById('btn-sync-models');
     const syncStatus = document.getElementById('sync-status');
 
-    let currentAssistants = [];
-    let activeAssistantId = null;
-    let editingAssistantId = null;
-
     // --- ARTIST DNA REVIEW ELEMENTS ---
     const btnReviewArtist = document.getElementById('btn-review-artist');
     // artistInput is already declared elsewhere
@@ -93,6 +112,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const artistDnaBody = document.getElementById('artist-dna-body');
     const btnApplyDnaSimple = document.getElementById('btn-apply-dna-simple');
     const btnApplyDnaFull = document.getElementById('btn-apply-dna-full');
+
+    // Fixed Action Buttons per User Request
+    const btnAddAssistantFixed = document.getElementById('btn-fix-add-assistant');
+    const btnAddCouncilFixed = document.getElementById('btn-fix-add-council');
+    const fixedActionZone = document.getElementById('assistants-fixed-actions');
 
     // 1. Open Review Modal
     if (btnReviewArtist) {
@@ -1363,6 +1387,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetContent = document.getElementById(targetId);
             if (targetContent) targetContent.classList.add('active');
 
+            // Show/Hide Fixed Actions Zone based on Main Tab
+            if (fixedActionZone) {
+                if (tab.dataset.tab === 'assistants') {
+                    fixedActionZone.style.display = 'flex';
+                } else {
+                    fixedActionZone.style.display = 'none';
+                }
+            }
+
             // Synchronize Log with Tab switching
             const tabNames = {
                 'compose': 'Sáng tác',
@@ -1926,6 +1959,39 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMultiSelectChips('energy-chips');
 
     // ============================================
+    // ASSISTANTS SUB-TABS LOGIC
+    // ============================================
+    assistSubBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sub = btn.dataset.sub;
+
+            // Switch Buttons
+            assistSubBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Switch Content
+            subAssistContents.forEach(content => {
+                if (content.id === `sub-assist-${sub}`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+
+            // Switch Fixed Buttons
+            if (sub === 'individual') {
+                if (btnAddAssistantFixed) btnAddAssistantFixed.style.display = 'flex';
+                if (btnAddCouncilFixed) btnAddCouncilFixed.style.display = 'none';
+            } else {
+                if (btnAddAssistantFixed) btnAddAssistantFixed.style.display = 'none';
+                if (btnAddCouncilFixed) btnAddCouncilFixed.style.display = 'flex';
+            }
+
+            updateLog(`Chuyển sang tab ${sub === 'individual' ? 'Trợ lý cá nhân' : 'Phòng hội đồng'}`);
+        });
+    });
+
+    // ============================================
     // AI MUSIC ASSISTANTS LOGIC (LOBBY MODE)
     // ============================================
 
@@ -2302,10 +2368,237 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDraggable(knowledgeContainer.querySelector('.lyrics-bottom-bar'), knowledgeTextarea);
     }
 
+    // ============================================
+    // COUNCIL CHAMBER LOGIC
+    // ============================================
+
+    function loadCouncils() {
+        chrome.storage.local.get(['ai_councils'], (res) => {
+            currentCouncils = res.ai_councils || [];
+            renderCouncilList();
+        });
+    }
+
+    function renderCouncilList() {
+        if (!councilList) return;
+        councilList.innerHTML = '';
+
+        if (currentCouncils.length === 0) {
+            councilList.innerHTML = '<div class="empty-state">Chưa có Phòng Hội Đồng nào. Hãy tạo nhóm đầu tiên của bạn!</div>';
+            return;
+        }
+
+        currentCouncils.forEach(council => {
+            const card = document.createElement('div');
+            card.className = `council-card ${council.id === activeAssistantId ? 'active' : ''}`;
+
+            // Get member avatars
+            const memberAvatars = council.memberIds.map(mid => {
+                const assistant = currentAssistants.find(a => a.id === mid);
+                return assistant ? assistant.avatar : '🤖';
+            }).slice(0, 4);
+
+            let avatarStackHtml = '';
+            memberAvatars.forEach(av => {
+                const isImg = av && (av.startsWith('http') || av.startsWith('data:image'));
+                avatarStackHtml += `
+                    <div class="stack-item">
+                        ${isImg ? `<img src="${av}" />` : av}
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="council-avatar-stack">
+                    ${avatarStackHtml}
+                </div>
+                <div class="council-info">
+                    <span class="council-name">${council.name}</span>
+                    <span class="council-desc">${council.description || 'Hội đồng thảo luận đa trợ lý.'}</span>
+                </div>
+                <div class="card-settings-btn" title="Chỉnh sửa">
+                    <i data-lucide="settings"></i>
+                </div>
+            `;
+
+            // Edit logic
+            const settingsBtn = card.querySelector('.card-settings-btn');
+            if (settingsBtn) {
+                settingsBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    openCouncilEditor(council.id);
+                };
+            }
+
+            // Selection logic
+            card.onclick = () => activateCouncilOnSuno(council);
+
+            councilList.appendChild(card);
+        });
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function saveCouncils() {
+        chrome.storage.local.set({ ai_councils: currentCouncils });
+    }
+
+    if (btnAddCouncil) {
+        btnAddCouncil.onclick = () => {
+            editingCouncilId = null;
+            editCouncilName.value = '';
+            editCouncilDesc.value = '';
+            selectedCouncilMemberIds = [];
+            btnDeleteCouncil.style.display = 'none';
+            renderMemberSelector();
+            councilEditorModal.style.display = 'flex';
+        };
+    }
+
+    function renderMemberSelector() {
+        if (!councilMemberSelector) return;
+        councilMemberSelector.innerHTML = '';
+
+        currentAssistants.forEach(assistant => {
+            const chip = document.createElement('div');
+            chip.className = `member-chip ${selectedCouncilMemberIds.includes(assistant.id) ? 'active' : ''}`;
+
+            const isImg = assistant.avatar && (assistant.avatar.startsWith('http') || assistant.avatar.startsWith('data:image'));
+
+            chip.innerHTML = `
+                <div class="member-chip-avatar">
+                    ${isImg ? `<img src="${assistant.avatar}" />` : (assistant.avatar || '🤖')}
+                </div>
+                <div class="member-chip-name">${assistant.name}</div>
+            `;
+
+            chip.onclick = () => {
+                if (selectedCouncilMemberIds.includes(assistant.id)) {
+                    selectedCouncilMemberIds = selectedCouncilMemberIds.filter(id => id !== assistant.id);
+                } else {
+                    selectedCouncilMemberIds.push(assistant.id);
+                }
+                renderMemberSelector();
+            };
+
+            councilMemberSelector.appendChild(chip);
+        });
+    }
+
+    function openCouncilEditor(id) {
+        const council = currentCouncils.find(c => c.id === id);
+        if (!council) return;
+
+        editingCouncilId = council.id;
+        editCouncilName.value = council.name;
+        editCouncilDesc.value = council.description || '';
+        selectedCouncilMemberIds = [...council.memberIds];
+
+        btnDeleteCouncil.style.display = 'block';
+        renderMemberSelector();
+        councilEditorModal.style.display = 'flex';
+    }
+
+    if (btnSaveCouncil) {
+        btnSaveCouncil.onclick = () => {
+            const name = editCouncilName.value.trim();
+            if (!name || selectedCouncilMemberIds.length < 2) {
+                updateLog("Vui lòng nhập tên và chọn ít nhất 2 trợ lý.");
+                return;
+            }
+
+            if (editingCouncilId) {
+                const idx = currentCouncils.findIndex(c => c.id === editingCouncilId);
+                if (idx !== -1) {
+                    currentCouncils[idx].name = name;
+                    currentCouncils[idx].description = editCouncilDesc.value.trim();
+                    currentCouncils[idx].memberIds = selectedCouncilMemberIds;
+                }
+            } else {
+                currentCouncils.push({
+                    id: 'council-' + Date.now(),
+                    name: name,
+                    description: editCouncilDesc.value.trim(),
+                    memberIds: selectedCouncilMemberIds,
+                    messages: []
+                });
+            }
+
+            saveCouncils();
+            renderCouncilList();
+            councilEditorModal.style.display = 'none';
+        };
+    }
+
+    if (btnDeleteCouncil) {
+        btnDeleteCouncil.onclick = () => {
+            if (!editingCouncilId || !confirm("Bạn có chắc chắn muốn giải tán hội đồng này?")) return;
+            currentCouncils = currentCouncils.filter(c => c.id !== editingCouncilId);
+            saveCouncils();
+            renderCouncilList();
+            councilEditorModal.style.display = 'none';
+        };
+    }
+
+    if (closeCouncilEditor) {
+        closeCouncilEditor.onclick = () => councilEditorModal.style.display = 'none';
+    }
+
+    async function activateCouncilOnSuno(council) {
+        if (activeAssistantId === council.id) {
+            activeAssistantId = null;
+            renderAssistantList();
+            renderCouncilList();
+            chrome.tabs.query({ url: "*://suno.com/*" }, (tabs) => {
+                tabs.forEach(tab => chrome.tabs.sendMessage(tab.id, { action: "CLOSE_ASSISTANT_CHAT" }));
+            });
+            updateLog("Đã tắt hội đồng.");
+            return;
+        }
+
+        activeAssistantId = council.id;
+        renderAssistantList();
+        renderCouncilList();
+
+        const context = getMusicContext();
+        chrome.tabs.query({ url: "*://suno.com/*" }, (tabs) => {
+            if (tabs.length === 0) {
+                updateLog("Vui lòng mở Suno để trò chuyện với hội đồng.");
+                return;
+            }
+
+            // Map member IDs to actual assistant objects for the roundtable
+            const members = council.memberIds.map(mid => currentAssistants.find(a => a.id === mid)).filter(Boolean);
+
+            chrome.tabs.sendMessage(tabs[0].id, {
+                action: "OPEN_ASSISTANT_CHAT",
+                assistant: {
+                    ...council,
+                    isCouncil: true,
+                    members: members,
+                    apiKey: members[0]?.apiKey || "" // Use first member's API key
+                },
+                musicContext: context
+            });
+            updateLog(`Đã kích hoạt Hội đồng: ${council.name}`);
+        });
+    }
+
+    // Fixed Buttons Handlers
+    if (btnAddAssistantFixed) {
+        btnAddAssistantFixed.onclick = () => {
+            if (btnAddAssistantPro) btnAddAssistantPro.click();
+        };
+    }
+    if (btnAddCouncilFixed) {
+        btnAddCouncilFixed.onclick = () => {
+            if (btnAddCouncil) btnAddCouncil.click();
+        };
+    }
+
     // Initialize Assistant Tab
     loadAssistants();
-
-    // Note: escapeHtml and renderMarkdown are imported from utils.js at the top of the file
+    loadCouncils();
 
     // Initialize Lucide icons
     if (typeof lucide !== 'undefined') {
